@@ -5,36 +5,37 @@ import glob, os
 
 def drawPlot(file, index):
 	data = []
-	path = "/Users/fuhao/cs744/new_hdfs_logs/tez/";
+	path = "/Users/fuhao/744_big_data_system/partA/new_hdfs_logs/mr/";
 	with open(path + file) as f:
 	    for line in f:
+
+	    	if line == "\n" or line == "Avro-Json\n":
+	    		continue
 	    	data.append(json.loads(line))
 
-	task_start = "TASK_ATTEMPT_STARTED"
+	map_start = "MAP_ATTEMPT_STARTED"
+	reduce_start = "REDUCE_ATTEMPT_STARTED"
 	task_finish = "TASK_FINISHED"
 	startTime = "startTime"
-	endTime = "endTime"
+	finishTime = "finishTime"
 
+	start_entry_key = "org.apache.hadoop.mapreduce.jobhistory.TaskAttemptStarted"
+	end_entry_key = "org.apache.hadoop.mapreduce.jobhistory.TaskFinished"
 	alive = 0
 
 	add = []
 	minus = []
 
-	events_type_counter = {}
 	for line in data:
-		if "events" not in line:
+		type_entry = line["type"]
+		if not (type_entry == map_start or type_entry == reduce_start or type_entry == task_finish):
 			continue
-		type_entry = line["events"][0]
-
-		if not (type_entry["eventtype"] == task_start or type_entry["eventtype"] == task_finish):
-			continue
-
-		time_entry = line["otherinfo"]
-		cur = type_entry["eventtype"]
-		if cur == task_start:
-			add.append(type_entry["ts"])
-		elif cur == task_finish:
-			minus.append(time_entry[endTime])
+		if type_entry == map_start or type_entry == reduce_start:
+			time_entry = line["event"][start_entry_key][startTime]
+			add.append(time_entry)
+		else:
+			time_entry = line["event"][end_entry_key][finishTime]
+			minus.append(time_entry)
 
 	add.sort()
 	minus.sort()
@@ -56,9 +57,8 @@ def drawPlot(file, index):
 	plt.figure(index)
 	plt.plot(arr)
 
-
 def main():
-	os.chdir("./new_hdfs_logs/tez")
+	os.chdir("./new_hdfs_logs/mr")
 	i = 0
 	for file in glob.glob("*.json"):
 		print (file)
