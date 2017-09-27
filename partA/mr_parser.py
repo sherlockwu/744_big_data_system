@@ -23,6 +23,8 @@ def drawPlot(file, index):
 	end_entry_key = "org.apache.hadoop.mapreduce.jobhistory.TaskFinished"
 	alive = 0
 
+	map_count = 0
+	reduce_count = 0
 	add = []
 	minus = []
 
@@ -33,6 +35,10 @@ def drawPlot(file, index):
 		if type_entry == map_start or type_entry == reduce_start:
 			time_entry = line["event"][start_entry_key][startTime]
 			add.append(time_entry)
+			if type_entry == map_start:
+				map_count += 1
+			else:
+				reduce_count += 1
 		else:
 			time_entry = line["event"][end_entry_key][finishTime]
 			minus.append(time_entry)
@@ -51,7 +57,8 @@ def drawPlot(file, index):
 			alive -= 1
 			ptr_minus += 1
 		arr.append(alive)
-
+	print ("numer of map tasks: " + str(map_count))
+	print ("numer of reduce tasks: " + str(reduce_count))
 	axes = plt.gca()
 	axes.set_ylim([0, 30])
 	plt.figure(index)

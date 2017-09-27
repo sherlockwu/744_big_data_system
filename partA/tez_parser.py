@@ -15,10 +15,15 @@ def drawPlot(file, index):
 	startTime = "startTime"
 	endTime = "endTime"
 
-	alive = 0
+	hdfs_read = "HDFS_BYTES_READ"
+	hdfs_write = "HDFS_BYTES_WRITTEN"
 
+	alive = 0
 	add = []
 	minus = []
+	map_count = 0
+	total_count = 0
+	reduce_count = 0
 
 	events_type_counter = {}
 	for line in data:
@@ -33,9 +38,17 @@ def drawPlot(file, index):
 		cur = type_entry["eventtype"]
 		if cur == task_start:
 			add.append(type_entry["ts"])
+			total_count += 1
 		elif cur == task_finish:
 			minus.append(time_entry[endTime])
+			for group in line["otherinfo"]["counters"]["counterGroups"]:
+				if group["counterGroupName"] == "org.apache.tez.common.counters.FileSystemCounter":
+					for counter in group["counters"]:
+						if counter["counterName"] == hdfs_read:
+							map_count += 1
 
+	print (map_count)
+	print (total_count - map_count)
 	add.sort()
 	minus.sort()
 	ptr_add = 0
