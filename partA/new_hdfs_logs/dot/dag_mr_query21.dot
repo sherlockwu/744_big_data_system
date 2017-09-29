@@ -1,0 +1,22 @@
+digraph mr_query_21 {
+graph [ label="mr_query_21", fontsize=24, fontname=Helvetica];
+node [fontsize=12, fontname=Helvetica];
+edge [fontsize=9, fontcolor=blue, fontname=Arial];
+"mr_query_21.Map_15_item" [ label = "Map_15[item]", shape = "box" ];
+"mr_query_21.Map_15_item" -> "mr_query_21.Map_15" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_21.Map_15" [ label = "Map_15[MapMRProcessor]" ];
+"mr_query_21.Map_15" -> "mr_query_21.Map_12" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Map_12" [ label = "Map_12[MapMRProcessor]"]
+"mr_query_21.Map_12" -> "mr_query_21.Map_9" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Map_9" [ label = "Map_9[MapMRProcessor]"]
+"mr_query_21.Map_9" -> "mr_query_21.Map_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Map_4" [ label = "Map_4[MapMRProcessor]"]
+"mr_query_21.Map_4" -> "mr_query_21.Reducer_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Reducer_4" [label = "Reducer_4[ReduceMRPRocessor]"]
+
+"mr_query_21.Reducer_4" -> "mr_query_21.Map_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Map_5" [ label = "Map_5[MapMRProcessor]"]
+"mr_query_21.Map_5" -> "mr_query_21.Reducer_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_21.Reducer_5" [label = "Reducer_5[ReduceMRPRocessor]"]
+
+}
