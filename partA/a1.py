@@ -9,6 +9,8 @@ def main():
 	plt.bar(np.asarray(x) - 0.2, mr_data, width=0.4, label="MR")
 	plt.bar(np.asarray(x) + 0.2, tez_data, width=0.4, label="tez")
 	plt.xticks(x, names)
+	plt.xlabel("query")
+	plt.ylabel("s")
 	plt.legend()
 	plt.show()
 

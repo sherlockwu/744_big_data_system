@@ -3,6 +3,7 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 import glob, os
 
+names = ["12", "21", "50", "71", "85"]
 def drawPlot(file, index):
 	data = []
 	path = "/Users/fuhao/744_big_data_system/partA/new_hdfs_logs/tez/";
@@ -47,8 +48,10 @@ def drawPlot(file, index):
 						if counter["counterName"] == hdfs_read:
 							map_count += 1
 
-	print (map_count)
-	print (total_count - map_count)
+	print ("total count : " + str(total_count))
+	print ("map count : " + str(map_count))
+	print ("reduce count: " + str(total_count - map_count))
+	print ("ratio of reduce versus map: " + str((total_count - map_count + 0.0) / map_count))
 	add.sort()
 	minus.sort()
 	ptr_add = 0
@@ -68,13 +71,14 @@ def drawPlot(file, index):
 	axes.set_ylim([0, 30])
 	plt.figure(index)
 	plt.plot(arr)
+	plt.title(names[index])
 
 
 def main():
 	os.chdir("./new_hdfs_logs/tez")
 	i = 0
 	for file in glob.glob("*.json"):
-		print (file)
+		print ("query " + names[i])
 		drawPlot(file, i)
 		i += 1
 	plt.show()

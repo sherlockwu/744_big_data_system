@@ -56,8 +56,8 @@ def compute_disk():
 		query_read_total = 0
 		query_write_total = 0
 		for host_index in range(5):
-			query_read_total += diff_read_mat[query_index][host_index]
-			query_write_total += diff_write_mat[query_index][host_index]
+			query_read_total += diff_read_mat[query_index][host_index] * 0.5 * 0.001
+			query_write_total += diff_write_mat[query_index][host_index] * 0.5 * 0.001
 		query_read_list.append(query_read_total)
 		query_write_list.append(query_write_total)
 
@@ -66,13 +66,14 @@ def compute_disk():
 		throughput_tez_read = (query_read_list[i + 5] + 0.0) / tez_data[i]
 		throughput_mr_write = (query_write_list[i] + 0.0) / mr_data[i]
 		throughput_tez_write = (query_write_list[i + 5] + 0.0) / tez_data[i]
-	print ("disk:")
-	print ("mr read: " + str(throughput_mr_read))
-	print ("tez read: " + str(throughput_tez_read))
-	print ("mr write: " + str(throughput_mr_write))
-	print ("tez write: " + str(throughput_tez_write))
+		print ("disk, query " + names[i])
+		print ("mr read: " + str(throughput_mr_read))
+		print ("tez read: " + str(throughput_tez_read))
+		print ("mr write: " + str(throughput_mr_write))
+		print ("tez write: " + str(throughput_tez_write))
 
 	plt.figure(0)
+	plt.ylabel("MB")
 	plt.plot(x, query_read_list[0:5], 'r', label="mr_read")
 	plt.plot(x, query_write_list[0:5], 'r--', label="mr_write")
 	plt.plot(x, query_read_list[5:], 'b', label="tez_read")
@@ -142,17 +143,18 @@ def compute_net():
 		throughput_tez_read = (query_read_list[i + 5] + 0.0) / tez_data[i]
 		throughput_mr_write = (query_write_list[i] + 0.0) / mr_data[i]
 		throughput_tez_write = (query_write_list[i + 5] + 0.0) / tez_data[i]
-	print ("net")
-	print ("mr read: " + str(throughput_mr_read))
-	print ("tez read: " + str(throughput_tez_read))
-	print ("mr write: " + str(throughput_mr_write))
-	print ("tez write: " + str(throughput_tez_write))
+		print ("net, query " + names[i])
+		print ("mr reveived: " + str(throughput_mr_read))
+		print ("tez received: " + str(throughput_tez_read))
+		print ("mr transmit: " + str(throughput_mr_write))
+		print ("tez transmit: " + str(throughput_tez_write))
 	
 	plt.figure(1)
-	plt.plot(x, query_read_list[0:5], 'r', label="mr_read")
-	plt.plot(x, query_write_list[0:5], 'r--', label="mr_write")
-	plt.plot(x, query_read_list[5:], 'b', label="tez_read")
-	plt.plot(x, query_write_list[5:], 'b--', label="tez_write")
+	plt.ylabel("bytes")
+	plt.plot(x, query_read_list[0:5], 'r', label="mr_received")
+	plt.plot(x, query_write_list[0:5], 'r--', label="mr_transmit")
+	plt.plot(x, query_read_list[5:], 'b', label="tez_received")
+	plt.plot(x, query_write_list[5:], 'b--', label="tez_transmit")
 	plt.xticks(x, names)
 	plt.title("network")
 	plt.legend()

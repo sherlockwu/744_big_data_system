@@ -3,6 +3,7 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 import glob, os
 
+names = ["12", "21", "50", "71", "85"]
 def drawPlot(file, index):
 	data = []
 	path = "/Users/fuhao/744_big_data_system/partA/new_hdfs_logs/mr/";
@@ -57,18 +58,22 @@ def drawPlot(file, index):
 			alive -= 1
 			ptr_minus += 1
 		arr.append(alive)
+	print ("total tasks: " + str(map_count + reduce_count))
 	print ("numer of map tasks: " + str(map_count))
 	print ("numer of reduce tasks: " + str(reduce_count))
+	print ("ratio of reduce versus map: " + str((reduce_count + 0.0) / map_count))
+
 	axes = plt.gca()
 	axes.set_ylim([0, 30])
 	plt.figure(index)
 	plt.plot(arr)
+	plt.title(names[index])
 
 def main():
 	os.chdir("./new_hdfs_logs/mr")
 	i = 0
 	for file in glob.glob("*.json"):
-		print (file)
+		print (names[i])
 		drawPlot(file, i)
 		i += 1
 	plt.show()
