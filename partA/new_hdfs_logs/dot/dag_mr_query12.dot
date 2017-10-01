@@ -1,0 +1,24 @@
+digraph mr_query_12 {
+graph [ label="mr_query_12", fontsize=24, fontname=Helvetica];
+node [fontsize=12, fontname=Helvetica];
+edge [fontsize=9, fontcolor=blue, fontname=Arial];
+"mr_query_12.Map_11_item" [ label = "Map_11[item]", shape = "box" ];
+"mr_query_12.Map_11_item" -> "mr_query_12.Map_11" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_12.Map_11" [ label = "Map_11[MapMRProcessor]" ];
+"mr_query_12.Map_11" -> "mr_query_12.Map_8" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Map_8" [ label = "Map_8[MapMRProcessor]"]
+"mr_query_12.Map_8" -> "mr_query_12.Map_3" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Map_3" [ label = "Map_3[MapMRProcessor]"]
+"mr_query_12.Map_3" -> "mr_query_12.Reducer_3" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Reducer_3" [label = "Reducer_3[ReduceMRPRocessor]"]
+"mr_query_12.Reducer_3" -> "mr_query_12.Map_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Map_4" [ label = "Map_4[MapMRProcessor]"]
+"mr_query_12.Map_4" -> "mr_query_12.Reducer_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Reducer_4" [label = "Reducer_4[ReduceMRPRocessor]"]
+
+"mr_query_12.Reducer_4" -> "mr_query_12.Map_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Map_5" [ label = "Map_5[MapMRProcessor]"]
+"mr_query_12.Map_5" -> "mr_query_12.Reducer_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_12.Reducer_5" [label = "Reducer_5[ReduceMRPRocessor]"]
+
+}

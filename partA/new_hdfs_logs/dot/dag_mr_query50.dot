@@ -1,0 +1,30 @@
+digraph mr_query_50 {
+graph [ label="mr_query_50", fontsize=24, fontname=Helvetica];
+node [fontsize=12, fontname=Helvetica];
+edge [fontsize=9, fontcolor=blue, fontname=Arial];
+"mr_query_50.Map_1_item" [ label = "Map_1[item]", shape = "box" ];
+"mr_query_50.Map_1_item" -> "mr_query_50.Map_1" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_50.Map_1" [ label = "Map_1[MapMRProcessor]"]
+"mr_query_50.Map_1" -> "mr_query_50.Reducer_1" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_50.Reducer_1" [label = "Reducer_1[ReduceMRPRocessor]"]
+"mr_query_50.Reducer_1" -> "mr_query_50.Map_17" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_50.Map_17" [ label = "Map_17[MapMRProcessor]" ];
+"mr_query_50.Map_17" -> "mr_query_50.Map_14" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_50.Map_14" [ label = "Map_14[MapMRProcessor]"]
+"mr_query_50.Map_14" -> "mr_query_50.Map_11" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_50.Map_11" [ label = "Map_11[MapMRProcessor]"]
+"mr_query_50.Map_11" -> "mr_query_50.Map_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_50.Map_5" [ label = "Map_5[MapMRProcessor]"]
+"mr_query_50.Map_5" -> "mr_query_50.Reducer_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_50.Reducer_5" [label = "Reducer_5[ReduceMRPRocessor]"]
+"mr_query_50.Reducer_5" -> "mr_query_50.Map_6" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_50.Map_6" [ label = "Map_6[MapMRProcessor]"]
+"mr_query_50.Map_6" -> "mr_query_50.Reducer_6" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_50.Reducer_6" [label = "Reducer_6[ReduceMRPRocessor]"]
+
+}

@@ -1,0 +1,38 @@
+digraph mr_query_71 {
+graph [ label="mr_query_71", fontsize=24, fontname=Helvetica];
+node [fontsize=12, fontname=Helvetica];
+edge [fontsize=9, fontcolor=blue, fontname=Arial];
+"mr_query_71.Map_17_item" [ label = "Map_17[item]", shape = "box" ];
+"mr_query_71.Map_17_item" -> "mr_query_71.Map_17" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_71.Map_17" [ label = "Map_17[MapMRProcessor]"]
+"mr_query_71.Map_17" -> "mr_query_71.Reducer_17" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_71.Reducer_17" [label = "Reducer_17[ReduceMRPRocessor]"]
+"mr_query_71.Reducer_17" -> "mr_query_71.Map_15" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_71.Map_20_item" [ label = "Map_20[item]", shape = "box" ];
+"mr_query_71.Map_20_item" -> "mr_query_71.Map_20" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_71.Map_20" [ label = "Map_20[MapMRProcessor]"]
+"mr_query_71.Map_20" -> "mr_query_71.Reducer_20" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_71.Reducer_20" [label = "Reducer_20[ReduceMRPRocessor]"]
+"mr_query_71.Reducer_20" -> "mr_query_71.Map_15" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_71.Map_23_item" [ label = "Map_23[item]", shape = "box" ];
+"mr_query_71.Map_23_item" -> "mr_query_71.Map_23" [ label = "Input [inputClass=MRInputLegacy,\n initializer=HiveSplitGenerator]" ];
+"mr_query_71.Map_23" [ label = "Map_23[MapMRProcessor]"]
+"mr_query_71.Map_23" -> "mr_query_71.Reducer_23" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_71.Reducer_23" [label = "Reducer_23[ReduceMRPRocessor]"]
+"mr_query_71.Reducer_23" -> "mr_query_71.Map_15" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_71.Map_15" [ label = "Map_15[MapMRProcessor]" ];
+"mr_query_71.Map_15" -> "mr_query_71.Map_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_71.Map_4" [ label = "Map_4[MapMRProcessor]"]
+"mr_query_71.Map_4" -> "mr_query_71.Reducer_4" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_71.Reducer_4" [label = "Reducer_4[ReduceMRPRocessor]"]
+"mr_query_71.Reducer_4" -> "mr_query_71.Map_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+
+"mr_query_71.Map_5" [ label = "Map_5[MapMRProcessor]"]
+"mr_query_71.Map_5" -> "mr_query_71.Reducer_5" [ label = "[input=UnorderedKVOutput,\n output=UnorderedKVInput,\n dataMovement=BROADCAST,\n schedulingType=SEQUENTIAL]" ];
+"mr_query_71.Reducer_5" [label = "Reducer_5[ReduceMRPRocessor]"]
+
+}
