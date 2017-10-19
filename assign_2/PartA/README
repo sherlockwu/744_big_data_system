@@ -1,0 +1,3 @@
+PartAQuestion1.scala: counts the RT, MT, RE within a 60-minute widnow
+PartAQuestion2.scala: finds userB in MT entries
+PartAQuestion3.scala: inner join the stream with a static list by "userA"
