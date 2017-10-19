@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import carbyne.simulator.Main.Globals;
 import carbyne.simulator.Simulator;
@@ -22,10 +23,11 @@ import carbyne.utils.Randomness;
 
 public class StageDag extends BaseDag {
 
+  private static Logger LOG = Logger.getLogger(StageDag.class.getName());
   public String dagName;
 
   public Map<String, Stage> stages;
-  public Map<Integer, String> vertexToStage;
+  public Map<Integer, String> vertexToStage;  // <vertexId, stageName vertexId in>
 
   public Map<String, String> nextHopOnCriticalPath;
 
@@ -229,7 +231,7 @@ public class StageDag extends BaseDag {
 
     Randomness r = new Randomness();
 
-    System.out.println("readDags; num.dags:" + numDags);
+    LOG.info("readDags; num.dags:" + numDags);
     Queue<BaseDag> dags = new LinkedList<BaseDag>();
     File file = new File(filePathString);
     assert (file.exists() && !file.isDirectory());
@@ -246,7 +248,7 @@ public class StageDag extends BaseDag {
         if (line.startsWith("#")) {
           dag_name = line.split("#")[1];
           dag_name = dag_name.trim();
-          // System.out.println("DAG name: " + dag_name);
+          LOG.fine("DAG name: " + dag_name);
           continue;
         }
 
@@ -367,12 +369,12 @@ public class StageDag extends BaseDag {
       String stage_dst, String comm_pattern) {
 
     if (!stages.containsKey(stage_src) || !stages.containsKey(stage_dst)) {
-      System.out.println("A stage entry for " + stage_src + " or " + stage_dst
+      LOG.severe("A stage entry for " + stage_src + " or " + stage_dst
           + " should be already inserted !!!");
       return;
     }
     if (stages.get(stage_src).children.containsKey(stage_dst)) {
-      System.out.println("An edge b/w " + stage_src + " and " + stage_dst
+      LOG.severe("An edge b/w " + stage_src + " and " + stage_dst
           + " is already present.");
       return;
     }
