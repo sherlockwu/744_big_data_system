@@ -1,0 +1,14 @@
+# dagname:int
+{
+  numberStages:int dagID:int [arrival:int]
+  {
+    stageName:str VertexDuration:dbl resources:Array[dbl] numVertices:int
+  }
+  numEdgeBetweenStages:int
+  {
+    stageSrc:str StageDst:str CommPattern:str
+  }
+}
+
+
+
