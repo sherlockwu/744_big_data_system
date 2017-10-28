@@ -1,0 +1,27 @@
+# README
+
+## Implementations
+* Q1:
+  * Two applications, disjoint and joint class implementing tumbling window and sliding window
+  * Output will be stored in current dir (script dir, copied from HDFS:/), named C_Q1_disjoint.output or C_Q1_joint.output
+    * NOTE: before run single script, it will delete all old outputs
+    * All output will also be printed to screen
+* Q2:
+  * One application with parameter for allowed lateness:
+    * late [lateness: 100]    (will allow 100 seconds lateness)
+    * Output will be stored in current dir (script dir, copied from HDFS:/), named C_Q2_[lateness].output
+  * tools: compare.sh
+    * to compare the output of Q2 with Q1_disjoint
+    * ./compare.sh source_file1 source_file2 output_file
+      * eg. ./compare.sh ./C_Q1_disjoint.output ./C_Q2_100.output ./common_100
+        * it will compare disjoint with 100 lateness to Q1 then write common windows to file named common_100
+
+## Files
+* PartCQuestion-1-disjoint.java 
+* PartCQuestion-1-joint.java 
+* PartCQuestion-2.java
+* tools
+  * compare.sh
+* common_window
+  * common windows we get
+  * output files of every question, every cases
