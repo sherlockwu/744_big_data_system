@@ -280,7 +280,7 @@ public class TweetsPrinterBolt extends BaseRichBolt {
         bw.flush();
         String [] words = currentText.split(" ");
         for(String word : words) {
-          if(stopWords.contains(word)) continue;
+          if(stopWords.contains(word.toLowerCase())) continue;
           this.collector.emit(new Values(word));
         }
       }
@@ -290,13 +290,11 @@ public class TweetsPrinterBolt extends BaseRichBolt {
       totalCount++;
     }
     else if(tuple.getSourceComponent().equalsIgnoreCase("hashtag")) {
-      System.out.println("hashtag");
       List<String> hashtags = (List<String>) tuple.getValueByField("tags");
       this.tagsSet = new HashSet(hashtags);
       //this.tagsSet = new HashSet(Arrays.asList(this.hashtags));
     }
     else if(tuple.getSourceComponent().equalsIgnoreCase("threshold")) {
-      System.out.println("threshold");
       this.threshold = (Integer) tuple.getValueByField("threshold");
     }
   }
