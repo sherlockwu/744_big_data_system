@@ -1,0 +1,5 @@
+TimeWindow{start=1341379800000, end=1341379860000} Count: 149 Type: (MT)
+TimeWindow{start=1341381300000, end=1341381360000} Count: 296 Type: (MT)
+TimeWindow{start=1341383580000, end=1341383640000} Count: 408 Type: (RT)
+TimeWindow{start=1341387360000, end=1341387420000} Count: 147 Type: (MT)
+TimeWindow{start=1341388560000, end=1341388620000} Count: 187 Type: (MT)
