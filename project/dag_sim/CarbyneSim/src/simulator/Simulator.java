@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
@@ -27,6 +28,7 @@ import carbyne.utils.Utils;
 
 // implement the timeline server
 public class Simulator {
+  private static Logger LOG = Logger.getLogger(Simulator.class.getName());
 
   public static double CURRENT_TIME = 0;
 
@@ -164,7 +166,7 @@ public class Simulator {
       if (Globals.TETRIS_UNIVERSAL) {
         interJobSched.resSharePolicy.packTasks();
       } else {
-        System.out.println("[Simulator]: jobCompleted:" + jobCompleted
+        LOG.info("[Simulator]: jobCompleted:" + jobCompleted
           + " newJobArrivals:" + newJobArrivals);
         if (jobCompleted || newJobArrivals)
           interJobSched.schedule();
@@ -178,14 +180,14 @@ public class Simulator {
         if (Globals.INTRA_JOB_POLICY != Globals.SchedulingPolicy.Carbyne) {
 
           for (BaseDag dag : runningJobs) {
-            // System.out.println("[Simulator]: intra scheduleDag for:" +
-            // dag.dagId);
+            LOG.fine("[Simulator]: intra scheduleDag for:" +
+              dag.dagId);
             intraJobSched.schedule((StageDag) dag);
           }
 
           // if still available resources, go one job at a time and fill if
           // something. can be scheduled more
-          System.out.println("[Simulator]: START work conserving; clusterAvail:"
+          LOG.fine("[Simulator]: START work conserving; clusterAvail:"
               + Simulator.cluster.getClusterResAvail());
 
           // while things can happen, give total resources to a job at a time,
@@ -206,7 +208,7 @@ public class Simulator {
             }
           }
 
-          System.out.println("[Simulator]: END work conserving; clusterAvail:"
+          LOG.info("[Simulator]: END work conserving; clusterAvail:"
               + Simulator.cluster.getClusterResAvail());
         } else {
           // compute if any tasks should be scheduled based on reverse schedule

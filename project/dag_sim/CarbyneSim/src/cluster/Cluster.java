@@ -33,7 +33,7 @@ public class Cluster {
 
   public boolean assignTask(int machineId, int dagId, int taskId,
       double taskDuration, Resources taskResources) {
-    // LOG.info("assign task: "+taskId+" from dag:"+dagId+" on machine:"+machineId);
+    LOG.fine("assign task: "+taskId+" from dag:"+dagId+" on machine:"+machineId);
     Machine machine = machines.get(machineId);
     assert (machine != null);
     boolean fit = machine.getTotalResAvail().greaterOrEqual(taskResources);

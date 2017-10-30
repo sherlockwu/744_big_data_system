@@ -3,9 +3,10 @@ package carbyne.sharepolicies;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.simulator.Simulator;
+import java.util.logging.Logger;
 
 public class FairSharePolicy extends SharePolicy {
-
+  private static Logger LOG = Logger.getLogger(FairSharePolicy.class.getName());
   Resources clusterTotCapacity = null;
 
   public FairSharePolicy(String policyName) {
@@ -28,8 +29,8 @@ public class FairSharePolicy extends SharePolicy {
     // update the resourceShareAllocated for every running job
     for (BaseDag job : Simulator.runningJobs) {
       job.rsrcQuota = quotaRsrcShare;
-      // System.out.println("Allocated to job:" + job.dagId + " share:"
-      // + job.rsrcQuota);
+      LOG.fine("Allocated to job:" + job.dagId + " share:"
+        + job.rsrcQuota);
     }
   }
 }
