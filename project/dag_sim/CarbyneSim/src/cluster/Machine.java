@@ -2,9 +2,12 @@ package carbyne.cluster;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Task;
@@ -12,6 +15,7 @@ import carbyne.simulator.Simulator;
 import carbyne.datastructures.Resources;
 
 public class Machine {
+  private static Logger LOG = Logger.getLogger(Machine.class.getName());
 
   int machineId;
 
@@ -27,8 +31,11 @@ public class Machine {
   // map: expected completion time -> Task context
   public Map<Task, Double> runningTasks;
 
+  // intermediate results from tasks (<dagID, Set<taskID>>)
+  private Map<Integer, Set<Integer>> intermediateResults; 
+
   public Machine(int machineId, Resources size, boolean execMode) {
-    // LOG.info("Initialize machine: "+machineId+" size:"+size);
+    LOG.info("Initialize machine: "+machineId+" size:"+size + " execMode:" + execMode);
     this.machineId = machineId;
     this.execMode = execMode;
     this.currentTime = Simulator.CURRENT_TIME;
@@ -36,6 +43,7 @@ public class Machine {
     assert size != null;
     maxResAlloc = Resources.clone(size);
     runningTasks = new HashMap<Task, Double>();
+    this.intermediateResults = new HashMap<Integer, Set<Integer>>();
   }
 
   public double earliestFinishTime() {
@@ -81,6 +89,8 @@ public class Machine {
   public Map<Integer, List<Integer>> finishTasks(double... finishTime) {
 
     currentTime = execMode ? Simulator.CURRENT_TIME : (Double) finishTime[0];
+    // System.out.println("Machine " + machineId + " execMode=" + execMode);
+    // System.out.println("Machine " + machineId + " starts collect finihsTasks. Current Time: " + Simulator.CURRENT_TIME);
 
     Map<Integer, List<Integer>> tasksFinished = new HashMap<Integer, List<Integer>>();
 
@@ -100,6 +110,10 @@ public class Machine {
           tasksFinished.put(t.dagId, new ArrayList<Integer>());
         }
         tasksFinished.get(t.dagId).add(t.taskId);
+        this.storeIntermediateResult(t.dagId, t.taskId);
+        // TODO: fix the bug
+        // System.out.println("Current Time: " + currentTime);
+        // this.printStorage();
         iter.remove();
       }
     }
@@ -112,5 +126,39 @@ public class Machine {
 
   public int getMachineId() {
     return this.machineId;
+  }
+
+  public Map<Integer, Set<Integer>> getIntermediateResults() {
+    return this.intermediateResults;
+  }
+
+  public void printStorage() {
+    System.out.println("Machine " + machineId + " current storage: ");
+    for (Map.Entry<Integer, Set<Integer>> entry : intermediateResults.entrySet()) {
+      System.out.print("DagID: " + entry.getKey() + "; TaskIDs: ");
+      for (Integer taskId: entry.getValue()) {
+        System.out.print(taskId + ",");
+      }
+      System.out.println("");
+    }
+  }
+
+  public void storeIntermediateResult(int dagId, int taskId) {
+    if (!intermediateResults.containsKey(dagId)) {
+      intermediateResults.put(dagId, new HashSet<Integer>());
+    }
+    intermediateResults.get(dagId).add(taskId);
+  }
+
+  public boolean containsIntermediateResult(int dagId, int taskId) {
+    return intermediateResults.containsKey(dagId) &&
+      intermediateResults.get(dagId).contains(taskId);
+  }
+
+  public boolean containsIntermediateResult(int taskId) {
+    for (Set<Integer> taskIdSet : intermediateResults.values()) {
+      if (taskIdSet.contains(taskId)) return true;
+    }
+    return false;
   }
 }

@@ -658,9 +658,13 @@ public class StageDag extends BaseDag {
       List<Interval> depCandTasks = (!reverse) ? getParents(candTask)
           : getChildren(candTask);
       for (Interval ival : depCandTasks) {
-        if (!finishedTasks.containsAll(ival.toList())) {
-          candTaskReadyToSched = false;
-          break;
+        if (!candTaskReadyToSched) break;
+        List<Integer> ivalList = ival.toList();
+        for (Integer taskId : ivalList) {
+          if (!Simulator.cluster.containsIntermediateResult(taskId)) {
+            candTaskReadyToSched = false;
+            break;
+          }
         }
       }
       if (candTaskReadyToSched) {

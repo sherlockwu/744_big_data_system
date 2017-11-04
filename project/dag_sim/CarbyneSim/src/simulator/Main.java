@@ -157,7 +157,7 @@ public class Main {
       Globals.SIM_END_TIME = 200000;
       Globals.STEP_TIME = 1;
 
-      Globals.NUM_MACHINES = 1;
+      Globals.NUM_MACHINES = 4;
       Globals.NUM_DIMENSIONS = 6;
       if (args.length == curArg) {
         LOG.info(UsageStr);

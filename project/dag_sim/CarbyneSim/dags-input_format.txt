@@ -9,3 +9,30 @@
     stageSrc:str StageDst:str CommPattern:str
   }
 }
+
+
+
+
+# add new tasks into runnableTasks
+StageDag.finishTasks()
+
+# Job (DAG) -- Stage -- Tasks
+A task has an unique id (flattened)
+
+# Update finishedTasks (a list)
+Simulator.simulate()
+  Map<Integer, List<Integer>> finishedTasks = cluster.finishTasks();
+  Cluster.finishTasks() {
+    Map<Integer, List<Integer>> finishedTasks
+      finishedTasksMachine = machine.finishTasks()
+  // collect all finished tasks from all machines (finished in the current time slot)
+
+
+  boolean jobCompleted = updateJobsStatus(finishedTasks);
+
+  Simulate.updateJobsStatus(Map<Integer, List<Integer>> finishedTasks) 
+      someDagFinished = ((StageDag) crdag).finishTasks(
+          finishedTasks.get(crdag.dagId), false);
+      StageDag.finishTasks
+      // check whether the current DAG has finished
+
