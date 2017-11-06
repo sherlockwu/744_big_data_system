@@ -1,5 +1,6 @@
 package carbyne.schedulers;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
 import carbyne.schedpolicies.BFSSchedPolicy;
@@ -20,23 +21,23 @@ public class IntraJobScheduler {
 
   public SchedPolicy resSchedPolicy;
 
-  public IntraJobScheduler() {
+  public IntraJobScheduler(Cluster cluster) {
 
     switch (Globals.INTRA_JOB_POLICY) {
     case Random:
-      resSchedPolicy = new RandomSchedPolicy(Simulator.cluster);
+      resSchedPolicy = new RandomSchedPolicy(cluster);
       break;
     case BFS:
-      resSchedPolicy = new BFSSchedPolicy(Simulator.cluster);
+      resSchedPolicy = new BFSSchedPolicy(cluster);
       break;
     case CP:
-      resSchedPolicy = new CPSchedPolicy(Simulator.cluster);
+      resSchedPolicy = new CPSchedPolicy(cluster);
       break;
     case Tetris:
-      resSchedPolicy = new TetrisSchedPolicy(Simulator.cluster);
+      resSchedPolicy = new TetrisSchedPolicy(cluster);
       break;
     case Carbyne:
-      resSchedPolicy = new CarbyneSchedPolicy(Simulator.cluster);
+      resSchedPolicy = new CarbyneSchedPolicy(cluster);
       break;
 
     default:

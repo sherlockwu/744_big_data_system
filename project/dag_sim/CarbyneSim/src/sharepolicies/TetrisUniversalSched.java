@@ -2,6 +2,7 @@ package carbyne.sharepolicies;
 
 import java.util.ArrayList;
 
+import carbyne.cluster.Cluster;
 import carbyne.cluster.Machine;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
@@ -16,13 +17,13 @@ public class TetrisUniversalSched extends SharePolicy {
 
   boolean inclDurInCosineSim = false;
 
-  public TetrisUniversalSched(String policyName) {
+  public TetrisUniversalSched(String policyName, Cluster cluster) {
     super(policyName);
-    clusterTotCapacity = Simulator.cluster.getClusterMaxResAlloc();
+    clusterTotCapacity = cluster.getClusterMaxResAlloc();
   }
 
   @Override
-  public void packTasks() {
+  public void packTasks(Cluster cluster) {
 
     runnableTasks = new ArrayList<Task>();
 
@@ -44,7 +45,7 @@ public class TetrisUniversalSched extends SharePolicy {
     // RG: this can be very expensive - TODO
     // among the runnable tasks, compute the best packing score
     // for each of them w.r.t to every machine they fit.
-    while ((bestTaskToPack = computeBestTaskToPack()).first() != null) {
+    while ((bestTaskToPack = computeBestTaskToPack(cluster)).first() != null) {
       //System.out.println("runnable_size:"+runnableTasks.size());
       Task taskToPack = bestTaskToPack.first();
       int taskToPackId = taskToPack.taskId;
@@ -52,7 +53,7 @@ public class TetrisUniversalSched extends SharePolicy {
       int machineTaskToPack = bestTaskToPack.second();
 
       // try to assign the next task on machineTaskTopack
-      boolean assigned = Simulator.cluster.assignTask(machineTaskToPack, dagToPackId,
+      boolean assigned = cluster.assignTask(machineTaskToPack, dagToPackId,
           taskToPackId, taskToPack.taskDuration, taskToPack.resDemands);
       //System.out.println("assigned:"+assigned);
       if (assigned) {
@@ -69,7 +70,7 @@ public class TetrisUniversalSched extends SharePolicy {
     }
   }
   
-  public Pair<Task, Integer> computeBestTaskToPack() {
+  public Pair<Task, Integer> computeBestTaskToPack(Cluster cluster) {
     Pair<Task, Integer> bestTaskToPack = Pair.createPair(null, -1);
 
     if (runnableTasks.isEmpty()) {
@@ -84,7 +85,7 @@ public class TetrisUniversalSched extends SharePolicy {
       Resources taskRes = task.resDemands;
       double taskDur = task.taskDuration;
 
-      for (Machine machine : Simulator.cluster.getMachines()) {
+      for (Machine machine : cluster.getMachines()) {
         Resources machineRes = machine.getTotalResAvail();
         double scoreTaskMachine = Resources.dotProduct(taskRes, machineRes);
         scoreTaskMachine = inclDurInCosineSim ? taskDur + scoreTaskMachine

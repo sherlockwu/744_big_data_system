@@ -1,5 +1,7 @@
 package carbyne.sharepolicies;
 
+import carbyne.cluster.Cluster;
+
 public abstract class SharePolicy {
 
   public String sharingPolicyName;
@@ -9,8 +11,8 @@ public abstract class SharePolicy {
   }
 
   // recompute the resource share allocated for every job
-  public void computeResShare() {
+  public void computeResShare(Cluster cluster) {
   }
 
-  public void packTasks() {}
+  public void packTasks(Cluster cluster) {}
 }

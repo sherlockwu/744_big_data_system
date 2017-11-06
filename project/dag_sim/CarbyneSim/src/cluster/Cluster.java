@@ -137,7 +137,9 @@ public class Cluster {
   // end util classes //
   public boolean containsIntermediateResult(int taskId) {
     for (Machine machine: this.machines.values()) {
-      if (machine.containsIntermediateResult(taskId)) return true;
+      if (machine.containsIntermediateResult(taskId)) {
+        return true;
+      }
     }
     return false;
   }

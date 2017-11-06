@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import carbyne.cluster.Cluster;
 import carbyne.simulator.Main.Globals;
 import carbyne.simulator.Simulator;
 import carbyne.utils.Interval;
@@ -626,7 +627,8 @@ public class StageDag extends BaseDag {
   }
 
   // return true or false -> based on if this job has finished or not
-  public boolean finishTasks(List<Integer> completedTasks, boolean reverse) {
+  public boolean finishTasks(Cluster cluster, 
+      List<Integer> completedTasks, boolean reverse) {
 
     if (completedTasks.isEmpty()) return false;
 
@@ -661,13 +663,15 @@ public class StageDag extends BaseDag {
         if (!candTaskReadyToSched) break;
         List<Integer> ivalList = ival.toList();
         for (Integer taskId : ivalList) {
-          if (!Simulator.cluster.containsIntermediateResult(taskId)) {
+          if (!cluster.containsIntermediateResult(taskId)) {
+            LOG.fine("Task " + candTask + " is not ready. Its parent " + taskId + " is still running.");
             candTaskReadyToSched = false;
             break;
           }
         }
       }
       if (candTaskReadyToSched) {
+        LOG.fine("Task " + candTask + " is now runnable.");
         runnableTasks.add(candTask);
       }
 

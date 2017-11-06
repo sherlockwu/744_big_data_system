@@ -1,5 +1,6 @@
 package carbyne.sharepolicies;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.simulator.Simulator;
@@ -9,15 +10,15 @@ public class FairSharePolicy extends SharePolicy {
   private static Logger LOG = Logger.getLogger(FairSharePolicy.class.getName());
   Resources clusterTotCapacity = null;
 
-  public FairSharePolicy(String policyName) {
+  public FairSharePolicy(String policyName, Cluster cluster) {
     super(policyName);
-    clusterTotCapacity = Simulator.cluster.getClusterMaxResAlloc();
+    clusterTotCapacity = cluster.getClusterMaxResAlloc();
   }
 
   // FairShare = 1 / N across all dimensions
   // N - total number of running jobs
   @Override
-  public void computeResShare() {
+  public void computeResShare(Cluster cluster) {
     int numJobsRunning = Simulator.runningJobs.size();
     if (numJobsRunning == 0) {
       return;
