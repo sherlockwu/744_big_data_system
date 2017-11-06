@@ -137,7 +137,7 @@ public class Main {
   public static void main(String[] args) {
 
     String UsageStr = "Usage: java carbyne.simulator.Main pathToInput "
-        + "num_machines adjust_fungible dag_id_end "
+        + "num_machines resource_size adjust_fungible dag_id_end "
         + "inter_job_policy=[FAIR | DRF | SJF] "
         + "intra_job_policy=[CARBYNE | TETRIS | CP | BFS | RANDOM]"
         + " level_optimism([0.0 - 1.0])"
@@ -157,8 +157,16 @@ public class Main {
       Globals.SIM_END_TIME = 200000;
       Globals.STEP_TIME = 1;
 
-      Globals.NUM_MACHINES = 4;
+      Globals.NUM_MACHINES = 1;
       Globals.NUM_DIMENSIONS = 6;
+
+      if (args.length == curArg) {
+        LOG.info(UsageStr);
+        System.exit(0);
+      }
+      Globals.NUM_MACHINES = Integer.parseInt(args[curArg]); // num_machines
+      curArg++;
+
       if (args.length == curArg) {
         LOG.info(UsageStr);
         System.exit(0);
