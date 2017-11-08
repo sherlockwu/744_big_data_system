@@ -28,9 +28,7 @@ public class StageDag extends BaseDag {
   public String dagName;
 
   public Map<String, Stage> stages;
-  public Map<Integer, String> vertexToStage;  // <vertexId, stageName vertexId in>
-
-  public Map<String, String> nextHopOnCriticalPath;
+  public Map<Integer, String> vertexToStage;  // <vertexId (taskID), stageName vertexId in>
 
   // keep track of ancestors and descendants of tasks per task
   public Map<Integer, Set<Integer>> ancestorsT, descendantsT,
@@ -414,10 +412,6 @@ public class StageDag extends BaseDag {
       CPlength = new HashMap<Integer, Double>();
     }
 
-    if (nextHopOnCriticalPath == null) {
-      nextHopOnCriticalPath = new HashMap<String, String>();
-    }
-
     double maxChildCP = Double.MIN_VALUE;
     String stageName = this.vertexToStage.get(taskId);
 
@@ -431,7 +425,6 @@ public class StageDag extends BaseDag {
           double childCP = longestCriticalPath(child);
           if (maxChildCP < childCP) {
             maxChildCP = childCP;
-            nextHopOnCriticalPath.put(stageName, this.vertexToStage.get(child));
           }
         }
       }

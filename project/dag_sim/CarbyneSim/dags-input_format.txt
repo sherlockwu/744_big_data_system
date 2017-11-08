@@ -34,5 +34,60 @@ Simulator.simulate()
       someDagFinished = ((StageDag) crdag).finishTasks(
           finishedTasks.get(crdag.dagId), false);
       StageDag.finishTasks
-      // check whether the current DAG has finished
+      // checks whether the current DAG has finished
+      // makes pending tasks runnable if possible
 
+
+# understanding the schedule
+
+skeleton
+
+--------------------------------------------------------------------------------
+  if (jobCompleted || newJobArrivals)
+    interJobSched.schedule(cluster_);
+
+  interJobSched.adjustShares(cluster_);
+
+  for (BaseDag dag : runningJobs) {
+    intraJobSched.schedule((StageDag) dag);
+  }
+  List<Integer> orderedJobs = interJobSched.orderedListOfJobsBasedOnPolicy();
+  for (int jobId : orderedJobs) {
+    for (BaseDag dag : runningJobs) {
+      if (dag.dagId == jobId) {
+        Resources totalResShare = Resources.clone(dag.rsrcQuota);
+        dag.rsrcQuota = Resources.clone(cluster_.getClusterResAvail());
+        intraJobSched.schedule((StageDag) dag);
+        dag.rsrcQuota = totalResShare;
+        break;
+      }
+    }
+  }
+--------------------------------------------------------------------------------
+
+Inter-job schedule {Options: Fair, DRF, SJF}
+
+  resSharePolicy.computeResShare(cluster);
+
+Fair:
+--------------------------------------------------------------------------------
+    // divide the resources fairly across the machines
+    Resources quotaRsrcShare = Resources.divide(clusterTotCapacity,
+        numJobsRunning);
+
+    for (BaseDag job : Simulator.runningJobs) { job.rsrcQuota = quotaRsrcShare; }
+--------------------------------------------------------------------------------
+
+No jobs evicted. When new jobs arrive, the share decreases.
+- All jobs are marked runnable on reading into Simulator.
+- At the beginning of each echo, if the job's start time matches the current time, the job will be transferred to the running queue.
+- If the job completes, it will be transferred to the complete queue.
+
+adjustShares for those jobs whose demands are not satisfied.
+  interJobSched.adjustShares(cluster_);
+
+
+Intra-job schedule
+
+    intraJobSched.schedule((StageDag) dag);
+      resSchedPolicy.schedule(dag);

@@ -17,7 +17,7 @@ public class Stage {
   public double vDuration;
   public Resources vDemands;
 
-  public Map<String, Dependency> parents, children;
+  public Map<String, Dependency> parents, children;  // <stageName, dependency>
 
   public Stage(String name, int id, Interval vids, double duration,
       double[] resources) {
