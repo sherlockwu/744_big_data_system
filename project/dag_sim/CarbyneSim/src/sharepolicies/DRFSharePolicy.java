@@ -3,6 +3,7 @@ package carbyne.sharepolicies;
 import java.util.HashMap;
 import java.util.Map;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
@@ -14,10 +15,10 @@ public class DRFSharePolicy extends SharePolicy {
   Map<Integer, Resources> resDemandsDags = null;
   Resources clusterTotCapacity = null;
 
-  public DRFSharePolicy(String policyName) {
+  public DRFSharePolicy(String policyName, Cluster cluster) {
     super(policyName);
     resDemandsDags = new HashMap<Integer, Resources>();
-    clusterTotCapacity = Simulator.cluster.getClusterMaxResAlloc();
+    clusterTotCapacity = cluster.getClusterMaxResAlloc();
   }
 
   // FairShare = DRF implementation
@@ -32,7 +33,7 @@ public class DRFSharePolicy extends SharePolicy {
   // 6. the DRF allocation for every job is computed:
   // ResourceDemandVector * 1 / max_sum
   @Override
-  public void computeResShare() {
+  public void computeResShare(Cluster cluster) {
     if (Simulator.runningJobs.size() == 0) {
       return;
     }

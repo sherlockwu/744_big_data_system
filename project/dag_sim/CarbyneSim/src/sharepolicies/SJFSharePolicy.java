@@ -1,5 +1,6 @@
 package carbyne.sharepolicies;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
@@ -13,7 +14,7 @@ public class SJFSharePolicy extends SharePolicy {
 
   // in this policy, give all the resources to the job with min(SRTF)
   @Override
-  public void computeResShare() {
+  public void computeResShare(Cluster cluster) {
     if (Simulator.runningJobs.size() == 0) {
       return;
     }
@@ -33,7 +34,7 @@ public class SJFSharePolicy extends SharePolicy {
     assert (shortestJobVal != Double.MAX_VALUE);
     for (BaseDag job : Simulator.runningJobs) {
       if (job.dagId == shortestJobId) {
-        job.rsrcQuota = Resources.clone(Simulator.cluster
+        job.rsrcQuota = Resources.clone(cluster
             .getClusterMaxResAlloc());
       } else {
         job.rsrcQuota = new Resources(0.0);

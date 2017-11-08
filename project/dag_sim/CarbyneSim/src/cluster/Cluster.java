@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import carbyne.datastructures.Resources;
 import carbyne.simulator.Main.Globals;
+import carbyne.simulator.Simulator;
 
 /**
  * describes the cluster characteristics both per cluster and per machine
@@ -33,7 +34,7 @@ public class Cluster {
 
   public boolean assignTask(int machineId, int dagId, int taskId,
       double taskDuration, Resources taskResources) {
-    // LOG.info("assign task: "+taskId+" from dag:"+dagId+" on machine:"+machineId);
+    LOG.fine("assign task: "+taskId+" from dag:"+dagId+" on machine:"+machineId);
     Machine machine = machines.get(machineId);
     assert (machine != null);
     boolean fit = machine.getTotalResAvail().greaterOrEqual(taskResources);
@@ -69,6 +70,7 @@ public class Cluster {
     // finish any task on this machine at the current time
     Map<Integer, List<Integer>> finishedTasks = new HashMap<Integer, List<Integer>>();
 
+    System.out.println("Cluster starts collecting finihsTasks. Current Time: " + Simulator.CURRENT_TIME);
     for (Machine machine : machines.values()) {
       Map<Integer, List<Integer>> finishedTasksMachine = execMode ? machine
           .finishTasks() : machine.finishTasks((double) earliestFinishTime[0]);
@@ -131,5 +133,14 @@ public class Cluster {
     }
     return earliestStartTime;
   }
+
   // end util classes //
+  public boolean containsIntermediateResult(int taskId) {
+    for (Machine machine: this.machines.values()) {
+      if (machine.containsIntermediateResult(taskId)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

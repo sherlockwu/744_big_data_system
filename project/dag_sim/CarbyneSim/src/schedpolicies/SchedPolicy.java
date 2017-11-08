@@ -6,10 +6,10 @@ import carbyne.datastructures.StageDag;
 
 public abstract class SchedPolicy {
 
-  public Cluster cluster;
+  protected Cluster cluster_;
 
-  public SchedPolicy(Cluster _cluster) {
-    cluster = _cluster;
+  public SchedPolicy(Cluster cluster) {
+    cluster_ = cluster;
   }
 
   public abstract void schedule(StageDag dag);

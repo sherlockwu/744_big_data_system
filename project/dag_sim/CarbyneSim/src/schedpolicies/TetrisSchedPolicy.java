@@ -33,7 +33,7 @@ public class TetrisSchedPolicy extends SchedPolicy {
       int machineTaskToPack = bestTaskToPack.second();
 
       // try to assign the next task on machineTaskTopack
-      boolean assigned = cluster.assignTask(machineTaskToPack, dag.dagId,
+      boolean assigned = cluster_.assignTask(machineTaskToPack, dag.dagId,
           taskToPack, dag.duration(taskToPack), dag.rsrcDemands(taskToPack));
 
       if (assigned) {
@@ -62,7 +62,7 @@ public class TetrisSchedPolicy extends SchedPolicy {
       if (!fit)
         continue;
 
-      for (Machine machine : cluster.getMachines()) {
+      for (Machine machine : cluster_.getMachines()) {
         Resources machineRes = machine.getTotalResAvail();
         double scoreTaskMachine = Resources.dotProduct(taskRes, machineRes);
         scoreTaskMachine = inclDurInCosineSim ? taskDur + scoreTaskMachine

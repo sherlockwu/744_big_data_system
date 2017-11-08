@@ -53,7 +53,7 @@ public class CPSchedPolicy extends SchedPolicy {
         continue;
 
       // try to assign the next task on a machine
-      boolean assigned = cluster.assignTask(dag.dagId, taskId,
+      boolean assigned = cluster_.assignTask(dag.dagId, taskId,
           dag.duration(taskId), dag.rsrcDemands(taskId));
 
       if (assigned) {

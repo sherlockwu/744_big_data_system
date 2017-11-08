@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
@@ -27,6 +28,7 @@ import carbyne.utils.Utils;
 
 // implement the timeline server
 public class Simulator {
+  private static Logger LOG = Logger.getLogger(Simulator.class.getName());
 
   public static double CURRENT_TIME = 0;
 
@@ -34,7 +36,7 @@ public class Simulator {
   public static Queue<BaseDag> runningJobs;
   public static Queue<BaseDag> completedJobs;
 
-  public static Cluster cluster;
+  private Cluster cluster_;
 
   public static Randomness r;
   double nextTimeToLaunchJob = 0;
@@ -49,6 +51,8 @@ public class Simulator {
 
   // dag_id -> list of tasks
   public static Map<Integer, Set<Integer>> tasksToStartNow;
+
+  public Cluster getCluster() { return cluster_; }
 
   public Simulator() {
     runnableJobs = StageDag.readDags(Globals.PathToInputFile,
@@ -98,10 +102,10 @@ public class Simulator {
     completedJobs = new LinkedList<BaseDag>();
 
     // every machine has capacity == 1
-    cluster = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
+    cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
 
-    interJobSched = new InterJobScheduler();
-    intraJobSched = new IntraJobScheduler();
+    interJobSched = new InterJobScheduler(cluster_);
+    intraJobSched = new IntraJobScheduler(cluster_);
 
     leftOverResAllocator = new LeftOverResAllocator();
 
@@ -113,7 +117,7 @@ public class Simulator {
   public void simulate() {
 
     for (Simulator.CURRENT_TIME = 0; Simulator.CURRENT_TIME < Globals.SIM_END_TIME; Simulator.CURRENT_TIME += Globals.STEP_TIME) {
-      System.out.println("\n==== STEP_TIME:" + Simulator.CURRENT_TIME
+      LOG.info("\n==== STEP_TIME:" + Simulator.CURRENT_TIME
           + " ====\n");
 
       Simulator.CURRENT_TIME = Utils.round(Simulator.CURRENT_TIME, 2);
@@ -121,7 +125,7 @@ public class Simulator {
 
       // terminate any task if it can finish and update cluster available
       // resources
-      Map<Integer, List<Integer>> finishedTasks = cluster.finishTasks();
+      Map<Integer, List<Integer>> finishedTasks = cluster_.finishTasks();
 
       // update jobs status with newly finished tasks
       boolean jobCompleted = updateJobsStatus(finishedTasks);
@@ -156,37 +160,37 @@ public class Simulator {
       boolean newJobArrivals = handleNewJobArrival();
 
       if (!jobCompleted && !newJobArrivals && finishedTasks.isEmpty()) {
-        System.out.println("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
+        LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
             + " ====\n");
         continue;
       }
 
       if (Globals.TETRIS_UNIVERSAL) {
-        interJobSched.resSharePolicy.packTasks();
+        interJobSched.resSharePolicy.packTasks(cluster_);
       } else {
-        System.out.println("[Simulator]: jobCompleted:" + jobCompleted
+        LOG.info("[Simulator]: jobCompleted:" + jobCompleted
           + " newJobArrivals:" + newJobArrivals);
         if (jobCompleted || newJobArrivals)
-          interJobSched.schedule();
+          interJobSched.schedule(cluster_);
 
-        System.out.println("Running jobs size:" + runningJobs.size());
+        LOG.info("Running jobs size:" + runningJobs.size());
 
         // reallocate the share
-        interJobSched.adjustShares();
+        interJobSched.adjustShares(cluster_);
 
         // do intra-job scheduling for every running job
         if (Globals.INTRA_JOB_POLICY != Globals.SchedulingPolicy.Carbyne) {
 
           for (BaseDag dag : runningJobs) {
-            // System.out.println("[Simulator]: intra scheduleDag for:" +
-            // dag.dagId);
+            LOG.fine("[Simulator]: intra scheduleDag for:" +
+              dag.dagId);
             intraJobSched.schedule((StageDag) dag);
           }
 
           // if still available resources, go one job at a time and fill if
           // something. can be scheduled more
-          System.out.println("[Simulator]: START work conserving; clusterAvail:"
-              + Simulator.cluster.getClusterResAvail());
+          LOG.fine("[Simulator]: START work conserving; clusterAvail:"
+              + cluster_.getClusterResAvail());
 
           // while things can happen, give total resources to a job at a time,
           // the order is dictated by the inter job scheduler:
@@ -198,7 +202,7 @@ public class Simulator {
             for (BaseDag dag : runningJobs) {
               if (dag.dagId == jobId) {
                 Resources totalResShare = Resources.clone(dag.rsrcQuota);
-                dag.rsrcQuota = Resources.clone(cluster.getClusterResAvail());
+                dag.rsrcQuota = Resources.clone(cluster_.getClusterResAvail());
                 intraJobSched.schedule((StageDag) dag);
                 dag.rsrcQuota = totalResShare;
                 break;
@@ -206,8 +210,8 @@ public class Simulator {
             }
           }
 
-          System.out.println("[Simulator]: END work conserving; clusterAvail:"
-              + Simulator.cluster.getClusterResAvail());
+          LOG.info("[Simulator]: END work conserving; clusterAvail:"
+              + cluster_.getClusterResAvail());
         } else {
           // compute if any tasks should be scheduled based on reverse schedule
           for (BaseDag dag : runningJobs) {
@@ -223,10 +227,10 @@ public class Simulator {
 
           // Step2: redistribute the leftOverResources and ensuring is work
           // conserving
-          leftOverResAllocator.allocLeftOverRsrcs();
+          leftOverResAllocator.allocLeftOverRsrcs(cluster_);
         } 
       }
-      System.out.println("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
+      LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
           + " ====\n");
     }
   }
@@ -249,7 +253,7 @@ public class Simulator {
         System.out.println("DAG:" + crdag.dagId + ": "
             + finishedTasks.get(crdag.dagId).size()
             + " tasks finished at time:" + Simulator.CURRENT_TIME);
-        someDagFinished = ((StageDag) crdag).finishTasks(
+        someDagFinished = ((StageDag) crdag).finishTasks(cluster_,
             finishedTasks.get(crdag.dagId), false);
 
         if (someDagFinished) {

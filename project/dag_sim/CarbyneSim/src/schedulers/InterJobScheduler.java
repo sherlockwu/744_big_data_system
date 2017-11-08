@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
@@ -25,32 +26,32 @@ public class InterJobScheduler {
 
   public SharePolicy resSharePolicy;
 
-  public InterJobScheduler() {
+  public InterJobScheduler(Cluster cluster) {
 
     switch (Globals.INTER_JOB_POLICY) {
     case Fair:
-      resSharePolicy = new FairSharePolicy("Fair");
+      resSharePolicy = new FairSharePolicy("Fair", cluster);
       break;
     case DRF:
-      resSharePolicy = new DRFSharePolicy("DRF");
+      resSharePolicy = new DRFSharePolicy("DRF", cluster);
       break;
     case SJF:
       resSharePolicy = new SJFSharePolicy("SJF");
       break;
     case TETRIS_UNIVERSAL:
-      resSharePolicy = new TetrisUniversalSched("Tetris_Universal");
+      resSharePolicy = new TetrisUniversalSched("Tetris_Universal", cluster);
       break;
     default:
       System.err.println("Unknown sharing policy");
     }
   }
 
-  public void schedule() {
+  public void schedule(Cluster cluster) {
     // compute how much share each DAG should get
-    resSharePolicy.computeResShare();
+    resSharePolicy.computeResShare(cluster);
   }
 
-  public void adjustShares() {
+  public void adjustShares(Cluster cluster) {
     List<Integer> unhappyDagsIds = new ArrayList<Integer>();
 
     final Map<Integer, Resources> unhappyDagsDistFromResShare = new HashMap<Integer, Resources>();
@@ -77,7 +78,7 @@ public class InterJobScheduler {
 
     // now try to allocate the available resources to dags in this order
     Resources availRes = Resources
-        .clone(Simulator.cluster.getClusterResAvail());
+        .clone(cluster.getClusterResAvail());
 
     for (int dagId : unhappyDagsIds) {
       if (!availRes.greater(new Resources(0.0)))

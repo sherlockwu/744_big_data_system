@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import carbyne.cluster.Cluster;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
@@ -25,13 +26,13 @@ public class LeftOverResAllocator {
     leftOverRes = new Resources(0.0);
   }
 
-  private void takeStockOfLeftOverRsrcs() {
-    leftOverRes = Simulator.cluster.getClusterResAvail();
+  private void takeStockOfLeftOverRsrcs(Cluster cluster) {
+    leftOverRes = cluster.getClusterResAvail();
   }
 
-  public void allocLeftOverRsrcs() {
+  public void allocLeftOverRsrcs(Cluster cluster) {
 
-    takeStockOfLeftOverRsrcs();
+    takeStockOfLeftOverRsrcs(cluster);
 
     // if nothing is leftover -> nothing to do
     if (!leftOverRes.greater(new Resources(0.0))) {
@@ -81,7 +82,7 @@ public class LeftOverResAllocator {
           leftOverRes);
       if (projectedTime > 0) {
         Simulator.intraJobSched.schedule(origDag);
-        takeStockOfLeftOverRsrcs();
+        takeStockOfLeftOverRsrcs(cluster);
       }
     }
     System.out.println("LeftOverRes remaining:" + leftOverRes);
