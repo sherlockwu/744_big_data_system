@@ -1,0 +1,47 @@
+\section{Part C}
+
+
+
+I upgraded Spark to 2.2.0 as it is the stable version for structured streaming. The CPU/mem configuration is in \tablename{~\ref{a2:pa:cfg}}.
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		spark.driver.memory  &            8g \\
+		spark.executor.cores  &           4 \\
+		spark.executor.memory  &          8g \\
+		spark.task.cpus         &         1 \\
+		\hline
+	\end{tabular}
+	\caption{CPU/mem configuration}
+	\label{a2:pa:cfg}
+\end{table}
+To git rid of the annoying logs, I set the log level as WARN.
+
+\begin{enumerate}[label=Question \arabic*.]
+\item The key is to count the RT, MT, RE within a 60-minute window. The is done by
+\begin{verbatim}
+    val windowedCounts = fileStreamDf.groupBy(
+	    window($"timestamp", "60 minutes", "30 minutes"), $"interaction"
+	    ).count().orderBy("window")
+\end{verbatim}
+
+To print the complete table, I set the numRows 563500 (number of files $\times$ maximum number of entries in each file) as an upper bound. The output mode is set "complete".
+
+\item The critical part is to select userB from MT entries. 
+\begin{verbatim}
+	val selectedUser = fileStreamDf.select("userB").where("interaction = 'MT'")
+\end{verbatim}
+To process the data every 10 seconds. I use the Trigger class in the query.
+\begin{verbatim}
+val query = selectedUser.writeStream.format("csv")
+	...
+	.trigger(Trigger.ProcessingTime("10 seconds"));
+\end{verbatim}
+The output mode is set "append" as I do not need to repeat previous items.
+\item I generated the list data as all odd numbers from 1 to 100000. The important thing is to inner join the list data with the stream by "userA".
+\begin{verbatim}
+	val filteredCounts = fileStreamDf.join(whiteList, "userA").groupBy("userA").count()
+\end{verbatim}
+    
+\end{enumerate}
