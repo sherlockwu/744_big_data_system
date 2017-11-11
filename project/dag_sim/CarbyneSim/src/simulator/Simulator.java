@@ -176,12 +176,12 @@ public class Simulator {
         LOG.info("Running jobs size:" + runningJobs.size());
 
         /* System.out.println("After inter-job schedule");
-        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
+        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse));
         // reallocate the share
-        interJobSched.adjustShares(cluster_);
+        // interJobSched.adjustShares(cluster_);
 
         System.out.println("After adjust shares");
-        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse));
+        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
         // do intra-job scheduling for every running job
         if (Globals.INTRA_JOB_POLICY != Globals.SchedulingPolicy.Carbyne) {
 
@@ -193,7 +193,7 @@ public class Simulator {
 
           // if still available resources, go one job at a time and fill if
           // something. can be scheduled more
-          LOG.info("[Simulator]: START work conserving; clusterAvail:"
+          /* LOG.info("[Simulator]: START work conserving; clusterAvail:"
               + cluster_.getClusterResAvail());
 
           // while things can happen, give total resources to a job at a time,
@@ -212,7 +212,7 @@ public class Simulator {
                 break;
               }
             }
-          }
+          } */
 
           LOG.info("[Simulator]: END work conserving; clusterAvail:"
               + cluster_.getClusterResAvail());
