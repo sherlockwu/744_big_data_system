@@ -13,6 +13,7 @@
 ./src/utils/Randomness.java
 ./src/utils/Triple.java
 ./src/utils/IntervalSet.java
+./src/utils/DagParser.java
 ./src/utils/Pair.java
 ./src/utils/Utils.java
 ./src/utils/package-info.java

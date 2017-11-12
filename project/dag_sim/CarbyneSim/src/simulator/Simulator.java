@@ -21,6 +21,7 @@ import carbyne.schedulers.InterJobScheduler;
 import carbyne.schedulers.IntraJobScheduler;
 import carbyne.simulator.Main.Globals;
 import carbyne.simulator.Main.Globals.JobsArrivalPolicy;
+import carbyne.utils.DagParser;
 import carbyne.utils.Pair;
 import carbyne.utils.Randomness;
 import carbyne.utils.Triple;
@@ -55,8 +56,8 @@ public class Simulator {
   public Cluster getCluster() { return cluster_; }
 
   public Simulator() {
-    runnableJobs = StageDag.readDags(Globals.PathToInputFile,
-        Globals.DagIdStart, Globals.DagIdEnd - Globals.DagIdStart + 1);
+    DagParser dagParser = new DagParser();
+    runnableJobs = dagParser.parseDAGSpecFile(Globals.PathToInputFile);
      // System.out.println("Print DAGs");
      // for (BaseDag dag : runnableJobs) {
      // ((StageDag) dag).viewDag();
@@ -176,17 +177,17 @@ public class Simulator {
         LOG.info("Running jobs size:" + runningJobs.size());
 
         /* System.out.println("After inter-job schedule");
-        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse));
+        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
         // reallocate the share
         // interJobSched.adjustShares(cluster_);
 
-        System.out.println("After adjust shares");
+        /* System.out.println("After adjust shares");
         runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
         // do intra-job scheduling for every running job
         if (Globals.INTRA_JOB_POLICY != Globals.SchedulingPolicy.Carbyne) {
 
           for (BaseDag dag : runningJobs) {
-            LOG.fine("[Simulator]: intra scheduleDag for:" +
+            LOG.info("[Simulator]: intra scheduleDag for:" +
               dag.dagId);
             intraJobSched.schedule((StageDag) dag);
           }
@@ -212,10 +213,10 @@ public class Simulator {
                 break;
               }
             }
-          } */
+          }
 
           LOG.info("[Simulator]: END work conserving; clusterAvail:"
-              + cluster_.getClusterResAvail());
+              + cluster_.getClusterResAvail()); */
         } else {
           // compute if any tasks should be scheduled based on reverse schedule
           for (BaseDag dag : runningJobs) {
