@@ -19,17 +19,27 @@ import carbyne.simulator.Simulator;
 public class Cluster {
 
   boolean execMode;
-  public Map<Integer, Machine> machines;
+  // public Map<Integer, Machine> machines;
+  private List<Machine> machines;
 
   private static Logger LOG = Logger.getLogger(Cluster.class.getName());
 
-  public Cluster(boolean state, Resources res) {
+  /* public Cluster(boolean state, Resources res) {
     execMode = state;
-    machines = new TreeMap<Integer, Machine>();
+    machines = new ArrayList<Machine>();
     int numberMachines = execMode ? Globals.NUM_MACHINES : 1;
     for (int i = 0; i < numberMachines; ++i) {
-      machines.put(i, new Machine(i, res, execMode));
+      machines.add(new Machine(i, res, execMode));
     }
+  } */
+
+  public Cluster(boolean state) {
+    execMode = state;
+    machines = new ArrayList<Machine>();
+  }
+
+  public void addMachine(Machine machine) {
+    machines.add(machine);
   }
 
   public boolean assignTask(int machineId, int dagId, int taskId,
@@ -52,7 +62,7 @@ public class Cluster {
 
     // find the first machine where the task can fit
     // put it there
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       boolean fit = machine.getTotalResAvail().greaterOrEqual(taskResources);
       if (!fit)
         continue;
@@ -71,7 +81,7 @@ public class Cluster {
     Map<Integer, List<Integer>> finishedTasks = new HashMap<Integer, List<Integer>>();
 
     System.out.println("Cluster starts collecting finihsTasks. Current Time: " + Simulator.CURRENT_TIME);
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       Map<Integer, List<Integer>> finishedTasksMachine = execMode ? machine
           .finishTasks() : machine.finishTasks((double) earliestFinishTime[0]);
 
@@ -92,17 +102,18 @@ public class Cluster {
   }
 
   // util classes //
+  public boolean getExecMode() { return execMode; }
   public Machine getMachine(int machine_id) {
     return machines.get(machine_id);
   }
 
   public Collection<Machine> getMachines() {
-    return machines.values();
+    return machines;
   }
 
   public Resources getClusterMaxResAlloc() {
     Resources maxClusterResAvail = new Resources();
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       maxClusterResAvail.sum(machine.maxResAlloc);
     }
     return maxClusterResAvail;
@@ -110,7 +121,7 @@ public class Cluster {
 
   public Resources getClusterResAvail() {
     Resources clusterResAvail = new Resources();
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       clusterResAvail.sum(machine.getTotalResAvail());
     }
     return clusterResAvail;
@@ -118,7 +129,7 @@ public class Cluster {
 
   public double earliestFinishTime() {
     double earliestFinishTime = Double.MAX_VALUE;
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       earliestFinishTime = Math.min(earliestFinishTime,
           machine.earliestFinishTime());
     }
@@ -127,7 +138,7 @@ public class Cluster {
 
   public double earliestStartTime() {
     double earliestStartTime = Double.MAX_VALUE;
-    for (Machine machine : machines.values()) {
+    for (Machine machine : machines) {
       earliestStartTime = Math.min(earliestStartTime,
           machine.earliestStartTime());
     }
@@ -136,7 +147,7 @@ public class Cluster {
 
   // end util classes //
   public boolean containsIntermediateResult(int taskId) {
-    for (Machine machine: this.machines.values()) {
+    for (Machine machine: this.machines) {
       if (machine.containsIntermediateResult(taskId)) {
         return true;
       }

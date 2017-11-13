@@ -393,7 +393,6 @@ public class StageDag extends BaseDag {
   public List<Interval> getParents(int taskId) {
 
     List<Interval> parentsTask = new ArrayList<Interval>();
-    System.out.println("GetParents:" + taskId);
     for (Dependency dep : stages.get(vertexToStage.get(taskId)).parents
         .values()) {
       Interval i = dep.getParents(taskId);

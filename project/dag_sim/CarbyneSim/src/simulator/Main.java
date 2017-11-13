@@ -67,6 +67,7 @@ public class Main {
     public static String FileInput = "dags-input.txt";
     public static String FileOutput = "dags-output.txt";
     public static String PathToInputFile = DataFolder + "/" + FileInput;
+    public static String ConfigPath = "inputs/config.json";
 
     static {
       switch (runmode) {

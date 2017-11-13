@@ -22,6 +22,7 @@ import carbyne.schedulers.IntraJobScheduler;
 import carbyne.simulator.Main.Globals;
 import carbyne.simulator.Main.Globals.JobsArrivalPolicy;
 import carbyne.utils.DagParser;
+import carbyne.utils.Configuration;
 import carbyne.utils.Pair;
 import carbyne.utils.Randomness;
 import carbyne.utils.Triple;
@@ -58,10 +59,13 @@ public class Simulator {
   public Simulator() {
     DagParser dagParser = new DagParser();
     runnableJobs = dagParser.parseDAGSpecFile(Globals.PathToInputFile);
-     // System.out.println("Print DAGs");
-     // for (BaseDag dag : runnableJobs) {
-     // ((StageDag) dag).viewDag();
-     //}
+    Configuration config = new Configuration();
+    config.parseConfigFile(Globals.ConfigPath);
+
+    System.out.println("Print DAGs");
+      for (BaseDag dag : runnableJobs) {
+      ((StageDag) dag).viewDag();
+    }
 
     if (Globals.COMPUTE_STATISTICS) {
 
@@ -103,7 +107,9 @@ public class Simulator {
     completedJobs = new LinkedList<BaseDag>();
 
     // every machine has capacity == 1
-    cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
+    // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
+    cluster_ = new Cluster(true);
+    config.populateCluster(cluster_);
 
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);

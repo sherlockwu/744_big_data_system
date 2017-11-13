@@ -63,7 +63,6 @@ public class DagParser {
     dag.setCriticalPaths();
     dag.setBFSOrder();
     for (int taskId : dag.allTasks()) {
-      System.out.println("GetParents:" + taskId);
       if (dag.getParents(taskId).isEmpty()) {
         dag.runnableTasks.add(taskId);
       }
