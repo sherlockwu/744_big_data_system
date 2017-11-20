@@ -43,6 +43,7 @@ public class CPSchedPolicy extends SchedPolicy {
       }
     });
     Iterator<Integer> iter = rtCopy.iterator();
+    dag.printCPLength();
     while (iter.hasNext()) {
       int taskId = iter.next();
 
@@ -57,7 +58,6 @@ public class CPSchedPolicy extends SchedPolicy {
           dag.duration(taskId), dag.rsrcDemands(taskId));
 
       if (assigned) {
-        // System.out.println("Assigned task:" + taskId);
         // remove the task from runnable and put it in running
         dag.runningTasks.add(taskId);
         dag.launchedTasksNow.add(taskId);
@@ -66,6 +66,7 @@ public class CPSchedPolicy extends SchedPolicy {
       }
     }
 
+    dag.printLaunchedTasks();
     // clear the list of tasks launched as of now
     dag.launchedTasksNow.clear();
   }

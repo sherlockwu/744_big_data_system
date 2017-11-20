@@ -154,7 +154,7 @@ public class Main {
       Globals.PathToInputFile = args[curArg];   // pathToInput
       curArg++;
 
-      Globals.SIM_END_TIME = 200000;
+      Globals.SIM_END_TIME = 10;
       Globals.STEP_TIME = 1;
 
       Globals.NUM_MACHINES = 1;

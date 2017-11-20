@@ -28,9 +28,7 @@ public class StageDag extends BaseDag {
   public String dagName;
 
   public Map<String, Stage> stages;
-  public Map<Integer, String> vertexToStage;  // <vertexId, stageName vertexId in>
-
-  public Map<String, String> nextHopOnCriticalPath;
+  public Map<Integer, String> vertexToStage;  // <vertexId (taskID), stageName vertexId in>
 
   // keep track of ancestors and descendants of tasks per task
   public Map<Integer, Set<Integer>> ancestorsT, descendantsT,
@@ -49,6 +47,14 @@ public class StageDag extends BaseDag {
     stages = new HashMap<String, Stage>();
     chokePointsS = new HashSet<String>();
     chokePointsT = null;
+  }
+
+  public StageDag(String dagName, int id, int... arrival) {
+    super(id, arrival);
+    stages = new HashMap<String, Stage>();
+    chokePointsS = new HashSet<String>();
+    chokePointsT = null;
+    this.dagName = dagName;
   }
 
   public static StageDag clone(StageDag dag) {
@@ -224,148 +230,6 @@ public class StageDag extends BaseDag {
     System.out.println(CPlength);
   }
 
-  // end print dag //
-
-  // read dags from file //
-  public static Queue<BaseDag> readDags(String filePathString, int bDagId,
-      int numDags) {
-
-    Randomness r = new Randomness();
-
-    LOG.info("readDags; num.dags:" + numDags);
-    Queue<BaseDag> dags = new LinkedList<BaseDag>();
-    File file = new File(filePathString);
-    assert (file.exists() && !file.isDirectory());
-
-    try {
-      BufferedReader br = new BufferedReader(new FileReader(file));
-      String line;
-      int dagsReadSoFar = 0;
-      int vIdxStart, vIdxEnd;
-      String dag_name = "";
-
-      while ((line = br.readLine()) != null) {
-        line = line.trim();
-        if (line.startsWith("#")) {
-          dag_name = line.split("#")[1];
-          dag_name = dag_name.trim();
-          LOG.fine("DAG name: " + dag_name);
-          continue;
-        }
-
-        int numStages = 0, ddagId = -1, arrival = 0;
-        vIdxStart = 0;
-        vIdxEnd = 0;
-
-        String[] args = line.split(" ");
-        assert (args.length <= 2) : "Incorrect node entry";
-
-        dagsReadSoFar += 1;
-        if (args.length >= 2) {
-          numStages = Integer.parseInt(args[0]);
-          ddagId = Integer.parseInt(args[1]);
-          if (args.length >= 3) {
-            arrival = Integer.parseInt(args[2]);
-          }
-          assert (numStages > 0);
-          assert (ddagId >= 0);
-        } else if (args.length == 1) {
-          numStages = Integer.parseInt(line);
-          ddagId = dagsReadSoFar;
-          assert (numStages > 0);
-          assert (ddagId >= 0);
-        }
-
-        StageDag dag = new StageDag(ddagId, arrival);
-        dag.dagName = dag_name;
-
-        for (int i = 0; i < numStages; ++i) {
-          String lline = br.readLine();
-          args = lline.split(" ");
-
-          int numVertices;
-          String stageName;
-          double durV;
-          stageName = args[0];
-          assert (stageName.length() > 0);
-
-          durV = Double.parseDouble(args[1]);
-          assert (durV >= 0);
-          double[] resources = new double[Globals.NUM_DIMENSIONS];
-          for (int j = 0; j < Globals.NUM_DIMENSIONS; j++) {
-            double res = Double.parseDouble(args[j + 2]);
-            assert (res >= 0 && res <= 1);
-            resources[j] = res;
-          }
-
-          if (Globals.ERROR != 0) {
-            double durMax = (1+Globals.ERROR) * durV;
-            double minDurVPossible = Math.min(durMax, durV);
-            double maxDurVPossible = Math.max(durMax, durV);
-            durV = Math.max(((1+(Globals.ERROR/2)) * durV), 1); 
-            //r.pickRandomDouble(minDurVPossible, maxDurVPossible);
-
-            for (int j = 0; j < Globals.NUM_DIMENSIONS; j++) {
-              resources[j] = Math.max((1+Globals.ERROR) * resources[j], 0.001);
-            }
-          }
-
-          numVertices = Integer.parseInt(args[8]);
-          assert (numVertices >= 0);
-
-          vIdxEnd += numVertices;
-
-          Stage stage = new Stage(stageName, i, new Interval(vIdxStart,
-              vIdxEnd - 1), durV, resources);
-          dag.stages.put(stageName, stage);
-          vIdxStart = vIdxEnd;
-        }
-
-        dag.vertexToStage = new HashMap<Integer, String>();
-        for (Stage stage : dag.stages.values())
-          for (int i = stage.vids.begin; i <= stage.vids.end; i++)
-            dag.vertexToStage.put(i, stage.name);
-
-        int numEdgesBtwStages;
-        line = br.readLine();
-        numEdgesBtwStages = Integer.parseInt(line);
-        assert (numEdgesBtwStages >= 0);
-
-        for (int i = 0; i < numEdgesBtwStages; ++i) {
-          args = br.readLine().split(" ");
-          assert (args.length == 3) : "Incorrect entry for edge description; [stage_src stage_dst comm_type]";
-
-          String stage_src = args[0], stage_dst = args[1], comm_pattern = args[2];
-          assert (stage_src.length() > 0);
-          assert (stage_dst.length() > 0);
-          assert (comm_pattern.length() > 0);
-
-          dag.populateParentsAndChildrenStructure(stage_src, stage_dst,
-              comm_pattern);
-        }
-        if (ddagId >= bDagId && ddagId - bDagId < numDags) {
-          dag.scaleDag();
-          dag.setCriticalPaths();
-          dag.setBFSOrder();
-          // add initial runnable tasks => all tasks with no parents
-          for (int taskId : dag.allTasks()) {
-            if (dag.getParents(taskId).isEmpty()) {
-              dag.runnableTasks.add(taskId);
-            }
-          }
-          dag.seedUnorderedNeighbors();
-          dags.add(dag);
-        }
-        if (ddagId > bDagId + numDags)
-          break;
-      }
-      br.close();
-    } catch (Exception e) {
-      System.err.println("Catch exception: " + e);
-    }
-    return dags;
-  }
-
   public void populateParentsAndChildrenStructure(String stage_src,
       String stage_dst, String comm_pattern) {
 
@@ -414,10 +278,6 @@ public class StageDag extends BaseDag {
       CPlength = new HashMap<Integer, Double>();
     }
 
-    if (nextHopOnCriticalPath == null) {
-      nextHopOnCriticalPath = new HashMap<String, String>();
-    }
-
     double maxChildCP = Double.MIN_VALUE;
     String stageName = this.vertexToStage.get(taskId);
 
@@ -431,7 +291,6 @@ public class StageDag extends BaseDag {
           double childCP = longestCriticalPath(child);
           if (maxChildCP < childCP) {
             maxChildCP = childCP;
-            nextHopOnCriticalPath.put(stageName, this.vertexToStage.get(child));
           }
         }
       }
@@ -534,6 +393,7 @@ public class StageDag extends BaseDag {
   public List<Interval> getParents(int taskId) {
 
     List<Interval> parentsTask = new ArrayList<Interval>();
+    System.out.println("GetParents:" + taskId);
     for (Dependency dep : stages.get(vertexToStage.get(taskId)).parents
         .values()) {
       Interval i = dep.getParents(taskId);

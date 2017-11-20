@@ -69,4 +69,17 @@ public abstract class BaseDag {
     }
     return usedRes;
   }
+
+  public void printCPLength() {
+    System.out.println("DagID:" + dagId + " critical path lengths");
+    for (Map.Entry<Integer, Double> entry : CPlength.entrySet()) {
+      System.out.println("task ID:" + entry.getKey() + ", cp length:" + entry.getValue());
+    }
+  }
+
+  public void printLaunchedTasks() {
+    System.out.print("DagID:" + dagId + " launched tasks now:");
+    launchedTasksNow.stream().forEach(taskID -> System.out.print(taskID + ","));
+    System.out.println("");
+  }
 }

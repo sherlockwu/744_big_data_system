@@ -5,7 +5,6 @@ import carbyne.datastructures.Resources;
 import carbyne.datastructures.StageDag;
 import carbyne.schedpolicies.BFSSchedPolicy;
 import carbyne.schedpolicies.CPSchedPolicy;
-import carbyne.schedpolicies.CarbyneSchedPolicy;
 import carbyne.schedpolicies.RandomSchedPolicy;
 import carbyne.schedpolicies.SchedPolicy;
 import carbyne.schedpolicies.TetrisSchedPolicy;
@@ -35,9 +34,6 @@ public class IntraJobScheduler {
       break;
     case Tetris:
       resSchedPolicy = new TetrisSchedPolicy(cluster);
-      break;
-    case Carbyne:
-      resSchedPolicy = new CarbyneSchedPolicy(cluster);
       break;
 
     default:

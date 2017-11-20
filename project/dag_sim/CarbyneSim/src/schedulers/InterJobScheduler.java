@@ -76,9 +76,12 @@ public class InterJobScheduler {
       }
     });
 
+    /* System.out.println("Unhappy dags:");
+    unhappyDagsIds.stream().forEach(x -> System.out.print(x + ",")); */
+
     // now try to allocate the available resources to dags in this order
-    Resources availRes = Resources
-        .clone(cluster.getClusterResAvail());
+    Resources availRes = Resources.clone(cluster.getClusterResAvail());
+    // System.out.println("Resources for Unhappy dags:" + availRes);
 
     for (int dagId : unhappyDagsIds) {
       if (!availRes.greater(new Resources(0.0)))
@@ -87,6 +90,7 @@ public class InterJobScheduler {
       StageDag dag = Simulator.getDag(dagId);
 
       Resources rsrcReqTillShare = unhappyDagsDistFromResShare.get(dagId);
+      // System.out.println("Dag:" + dagId + "requires " + rsrcReqTillShare);
 
       if (availRes.greaterOrEqual(rsrcReqTillShare)) {
         availRes.subtract(rsrcReqTillShare);

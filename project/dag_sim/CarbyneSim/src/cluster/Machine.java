@@ -89,8 +89,6 @@ public class Machine {
   public Map<Integer, List<Integer>> finishTasks(double... finishTime) {
 
     currentTime = execMode ? Simulator.CURRENT_TIME : (Double) finishTime[0];
-    // System.out.println("Machine " + machineId + " execMode=" + execMode);
-    // System.out.println("Machine " + machineId + " starts collect finihsTasks. Current Time: " + Simulator.CURRENT_TIME);
 
     Map<Integer, List<Integer>> tasksFinished = new HashMap<Integer, List<Integer>>();
 
