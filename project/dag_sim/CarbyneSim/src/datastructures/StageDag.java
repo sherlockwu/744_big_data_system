@@ -26,6 +26,7 @@ public class StageDag extends BaseDag {
 
   private static Logger LOG = Logger.getLogger(StageDag.class.getName());
   public String dagName;
+  private double quota_;
 
   public Map<String, Stage> stages;
   public Map<Integer, String> vertexToStage;  // <vertexId (taskID), stageName vertexId in>
@@ -42,23 +43,25 @@ public class StageDag extends BaseDag {
   // keep track of adjusted profiles for certain tasks;
   public Map<Integer, Task> adjustedTaskDemands = null;
 
-  public StageDag(int id, int... arrival) {
+  public StageDag(int id, double quota, int... arrival) {
     super(id, arrival);
     stages = new HashMap<String, Stage>();
     chokePointsS = new HashSet<String>();
     chokePointsT = null;
+    quota_ = quota;
   }
 
-  public StageDag(String dagName, int id, int... arrival) {
+  public StageDag(String dagName, int id, double quota, int... arrival) {
     super(id, arrival);
     stages = new HashMap<String, Stage>();
     chokePointsS = new HashSet<String>();
     chokePointsT = null;
     this.dagName = dagName;
+    quota_ = quota;
   }
 
   public static StageDag clone(StageDag dag) {
-    StageDag clonedDag = new StageDag(dag.dagId);
+    StageDag clonedDag = new StageDag(dag.dagId, dag.getQuota());
     clonedDag.dagName = dag.dagName;
 
     clonedDag.rsrcQuota = Resources.clone(dag.rsrcQuota);
@@ -160,6 +163,8 @@ public class StageDag extends BaseDag {
           dependency.child, dependency.type);
     }
   }
+
+  public double getQuota() {return quota_;}
 
   // only for tasks that are not running or finished
   public void reverseDag() {

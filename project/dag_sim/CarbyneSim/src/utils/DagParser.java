@@ -32,6 +32,7 @@ public class DagParser {
 
       for (Object jDag: jDags) {
         dags.add(parseDAG((JSONObject)jDag));
+        quota_.add();
       }
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
@@ -42,6 +43,7 @@ public class DagParser {
   public StageDag parseDAG(JSONObject jDag) {
     StageDag dag = new StageDag(jDag.get("name").toString(), 
         Integer.parseInt(jDag.get("dagID").toString()), 
+        Double.parseDouble(jDag.get("quota").toString()),
         Integer.parseInt(jDag.get("arrival_time").toString()));
 
     JSONArray jStages = (JSONArray)jDag.get("stages");
@@ -82,5 +84,17 @@ public class DagParser {
   public void parseDependency(JSONObject jDep, StageDag dag) {
     dag.populateParentsAndChildrenStructure(jDep.get("src").toString(),
         jDep.get("dst").toString(), jDep.get("pattern").toString());
+  }
+
+  public double[] parseInputData(String filePath) {
+    double[] shares = null;
+    try {
+      FileReader fr = new FileReader(filePath);
+      JSONObject jData = (JSONObject)parser_.parse(fr);
+      shares = ((JSONArray)jData.get("share")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray();
+    } catch (Exception e) {
+      System.err.println("Catch exception: " + e);
+    }
+    return shares;
   }
 }

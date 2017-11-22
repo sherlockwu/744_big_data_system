@@ -31,7 +31,7 @@ public class Utils {
     int numJobs = 5000;
     Map<Integer, BaseDag> inputJobsMap = new HashMap<Integer, BaseDag>();
     DagParser dagParser = new DagParser();
-    Queue<BaseDag> inputJobs = dagParser.parseDAGSpecFile(Globals.PathToInputFile);;
+    Queue<BaseDag> inputJobs = dagParser.parseDAGSpecFile(Globals.pathToInputDagFile);;
     for (BaseDag dag : inputJobs) {
       inputJobsMap.put(dag.dagId, dag);
     }

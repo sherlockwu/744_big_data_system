@@ -31,12 +31,11 @@ public class Machine {
   // map: expected completion time -> Task context
   public Map<Task, Double> runningTasks;
   private double diskVolume_;
-  private double perJobQuota_;
 
   // intermediate results from tasks (<dagID, Set<taskID>>)
   private Map<Integer, Set<Integer>> intermediateResults; 
 
-  public Machine(int machineId, Resources size, double diskVolume, double perJobQuota, boolean execMode) {
+  public Machine(int machineId, Resources size, double diskVolume, boolean execMode) {
     LOG.info("Initialize machine: "+machineId+" "+size + " execMode:" + execMode);
     this.machineId = machineId;
     this.execMode = execMode;

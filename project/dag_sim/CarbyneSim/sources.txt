@@ -34,6 +34,7 @@
 ./src/sharepolicies/TetrisUniversalSched.java
 ./src/sharepolicies/package-info.java
 ./src/F2/SpillEvent.java
+./src/F2/DataService.java
 ./src/F2/ReadyEvent.java
 ./src/cluster/Machine.java
 ./src/cluster/Cluster.java

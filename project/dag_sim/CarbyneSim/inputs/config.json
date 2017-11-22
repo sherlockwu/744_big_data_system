@@ -3,7 +3,6 @@
     {
       "resources": [0.6, 0.6, 0.6, 0.6, 0.6, 0.6],
       "disk": 500,
-      "per-job_quota": 100,
       "replica": 1
     }
   ],

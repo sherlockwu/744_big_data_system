@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.DoubleStream;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -16,6 +17,7 @@ import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.Stage;
 import carbyne.datastructures.StageDag;
+import carbyne.F2.*;
 import carbyne.resources.LeftOverResAllocator;
 import carbyne.schedulers.InterJobScheduler;
 import carbyne.schedulers.IntraJobScheduler;
@@ -27,6 +29,7 @@ import carbyne.utils.Pair;
 import carbyne.utils.Randomness;
 import carbyne.utils.Triple;
 import carbyne.utils.Utils;
+
 
 // implement the timeline server
 public class Simulator {
@@ -54,13 +57,29 @@ public class Simulator {
   // dag_id -> list of tasks
   public static Map<Integer, Set<Integer>> tasksToStartNow;
 
+  private Queue<SpillEvent> spillEventQueue_;
+  private Queue<ReadyEvent> readyEventQueue_;
+
   public Cluster getCluster() { return cluster_; }
 
   public Simulator() {
     DagParser dagParser = new DagParser();
-    runnableJobs = dagParser.parseDAGSpecFile(Globals.PathToInputFile);
+    runnableJobs = dagParser.parseDAGSpecFile(Globals.pathToInputDagFile);
     Configuration config = new Configuration();
-    config.parseConfigFile(Globals.ConfigPath);
+    config.parseConfigFile(Globals.pathToConfig);
+    double[] shares = dagParser.parseInputData(Globals.pathToInputDataFile);
+    List<Double> quota = new ArrayList<Double>();
+    for (BaseDag dag: runnableJobs) {
+      quota.add(dag.getQuota());
+    }
+    DataService ds = new DataService(shares, quota.toArray(), config.getNumGlobalPart());
+    spillEventQueue_ = new Queue<>();
+    readyEventQueue_ = new Queue<>();
+
+    System.out.println("Key shares:");
+    for (int i = 0; i < shares.length; i++) {
+      System.out.print(i + ":" + shares[i] + ", ");
+    }
 
     System.out.println("Print DAGs");
       for (BaseDag dag : runnableJobs) {
@@ -110,6 +129,7 @@ public class Simulator {
     // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
+
 
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);
@@ -175,6 +195,17 @@ public class Simulator {
       if (Globals.TETRIS_UNIVERSAL) {
         interJobSched.resSharePolicy.packTasks(cluster_);
       } else {
+        // TODO: put these scheduling process into ES
+        //   Remove the dependency-driven runnable job update. Use ReadyEvent from DS instead.
+        /*
+         * skeleton:
+         * {
+         *   es.receiveReadyEvents(readyEventQueue_);
+         *   es.schedule();
+         *   es.emitSpillEvents(spillEventQueue_);
+         *   ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
+         * }
+         */
         LOG.info("[Simulator]: jobCompleted:" + jobCompleted
           + " newJobArrivals:" + newJobArrivals);
         if (jobCompleted || newJobArrivals)

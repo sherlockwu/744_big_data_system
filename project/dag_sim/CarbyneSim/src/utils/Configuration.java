@@ -14,6 +14,7 @@ import org.json.simple.parser.JSONParser;
 public class Configuration {
   private JSONParser parser_;
   private JSONObject jCfg_;
+  private int numGlobalPart_;
 
   private static Logger LOG = Logger.getLogger(Configuration.class.getName());
 
@@ -21,11 +22,14 @@ public class Configuration {
     parser_ = new JSONParser();
   }
 
+  public int getNumGlobalPart() { return numGlobalPart_; }
+
   public void parseConfigFile(String filePath) {
     try {
       FileReader fr = new FileReader(filePath);
       jCfg_ = (JSONObject)parser_.parse(fr);
       LOG.info("parse configuration file " + filePath);
+      numGlobalPart_ = Integer.parseInt(jCfg_.get("global_partitions_per_machine").toString());
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
     }
@@ -43,7 +47,6 @@ public class Configuration {
       for (int j = 0; j < replica; j++) {
         Machine machine = new Machine(nextId, new Resources(res),
             Double.parseDouble(jMach.get("disk").toString()), 
-            Double.parseDouble(jMach.get("per-job_quota").toString()), 
             cluster.getExecMode());
         cluster.addMachine(machine);
         nextId++;
