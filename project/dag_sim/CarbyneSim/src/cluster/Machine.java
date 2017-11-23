@@ -46,7 +46,6 @@ public class Machine {
     runningTasks = new HashMap<Task, Double>();
     this.intermediateResults = new HashMap<Integer, Set<Integer>>();
     this.diskVolume_ = diskVolume;
-    this.perJobQuota_ = perJobQuota;
   }
 
   public double earliestFinishTime() {

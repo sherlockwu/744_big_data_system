@@ -1,6 +1,7 @@
 package carbyne.F2;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -36,9 +37,13 @@ class StageOutput {
   }
 
   public void assignMachines(double[] usage) {
-    int[] indexes = IntStream.range(0, 100).toArray();
-    Arrays.sort(indexes, (int i, int j) -> Double.compare(usage[i], usage[j]));
-    machineIds_ = Arrays.copyOf(indexes, numMachines_);
+    Integer[] indexes = IntStream.range(0, 100).boxed().toArray(Integer[]::new);
+    Arrays.sort(indexes, new Comparator<Integer>() {
+      @Override public int compare(final Integer i, final Integer j) {
+        return Double.compare(usage[i], usage[j]);
+      }
+    });
+    for (int i = 0; i < numMachines_; i++) { machineIds_[i] = indexes[i]; }
   }
 
   public Map<Integer, Double> materialize(Map<Integer, Double> data) {
@@ -56,7 +61,7 @@ class StageOutput {
       if (!usage.containsKey(machineId)) {
         usage.put(machineId, 0.0);
       }
-      usage.get(machineId) += entry.getValue();
+      usage.put(machineId, Double.valueOf(entry.getValue().doubleValue() + usage.get(machineId).doubleValue()));
     }
     return usage;
   }

@@ -1,5 +1,6 @@
 package carbyne.simulator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,7 +18,11 @@ import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Resources;
 import carbyne.datastructures.Stage;
 import carbyne.datastructures.StageDag;
-import carbyne.F2.*;
+import carbyne.F2.DataService;
+import carbyne.F2.ExecuteService;
+import carbyne.F2.Partition;
+import carbyne.F2.SpillEvent;
+import carbyne.F2.ReadyEvent;
 import carbyne.resources.LeftOverResAllocator;
 import carbyne.schedulers.InterJobScheduler;
 import carbyne.schedulers.IntraJobScheduler;
@@ -70,11 +75,11 @@ public class Simulator {
     double[] shares = dagParser.parseInputData(Globals.pathToInputDataFile);
     List<Double> quota = new ArrayList<Double>();
     for (BaseDag dag: runnableJobs) {
-      quota.add(dag.getQuota());
+      quota.add(((StageDag)dag).getQuota());
     }
-    DataService ds = new DataService(shares, quota.toArray(), config.getNumGlobalPart());
-    spillEventQueue_ = new Queue<>();
-    readyEventQueue_ = new Queue<>();
+    DataService ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart());
+    spillEventQueue_ = new LinkedList<SpillEvent>();
+    readyEventQueue_ = new LinkedList<ReadyEvent>();
 
     System.out.println("Key shares:");
     for (int i = 0; i < shares.length; i++) {

@@ -1,9 +1,10 @@
 package carbyne.F2;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Queue;
 
-class DataService {
+public class DataService {
   private double[] keyShares_;
   private double[] quota_;  // quota per job
   private int numGlobalPart_;
@@ -19,14 +20,14 @@ class DataService {
   }
 
   public void receiveSpillEvents(Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
-    SpillEvent event = events.poll();
+    SpillEvent event = spillEventQueue.poll();
     Map<Integer, Partition> readyParts = null;
     while (event != null) {
       readyParts = receiveSpillEvent(event);
       for (Map.Entry<Integer, Partition> part: readyParts.entrySet()) {
-        readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), part.getKey(), part.getValue(), part.isLastPartReady()));
+        readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), part.getKey(), part.getValue()));
       }
-      event = events.poll();
+      event = spillEventQueue.poll();
     }
   }
 
@@ -43,7 +44,7 @@ class DataService {
     if (!stageOutput_.get(dagId).containsKey(stageId)) {
       stageOutput_.get(dagId).put(stageId, new StageOutput(usage_.get(dagId), quota_[dagId], numGlobalPart_));
     }
-    Map<Integer, Map> newUsage = stageOutput_.get(dagId).get(stageId).materialize(event.getData());
+    Map<Integer, Double> newUsage = stageOutput_.get(dagId).get(stageId).materialize(event.getData());
     for (Map.Entry<Integer, Double> entry: newUsage.entrySet()) {
       usage_.get(dagId)[entry.getKey()] += entry.getValue();
     }
@@ -54,6 +55,6 @@ class DataService {
     if (event.isLastSpill()) {
        stageOutput_.get(dagId).get(stageId).markComplete();
     }
-    return stageOutput_.getReadyPartitions();
+    return stageOutput_.get(dagId).get(stageId).getReadyPartitions();
   }
 }

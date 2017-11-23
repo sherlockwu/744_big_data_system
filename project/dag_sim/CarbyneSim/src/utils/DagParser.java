@@ -32,7 +32,6 @@ public class DagParser {
 
       for (Object jDag: jDags) {
         dags.add(parseDAG((JSONObject)jDag));
-        quota_.add();
       }
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
