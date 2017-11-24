@@ -9,14 +9,16 @@ public class SpillEvent {
   private int dagId_;
   private int stageId_;
   private int taskId_;
+  private double timestamp_;
 
   public SpillEvent(Map<Integer, Double> data, boolean lastSpill,
-      int dagId, int stageId, int taskId) {
+      int dagId, int stageId, int taskId, double timestamp) {
     data_ = data;
     lastSpill_ = lastSpill;
     dagId_ = dagId;
     stageId_ = stageId;
     taskId_ = taskId;
+    timestamp_ = timestamp;
   }
 
   Map<Integer, Double> getData() { return data_; }
@@ -24,4 +26,5 @@ public class SpillEvent {
   int getStageId() { return stageId_; }
   int getTaskId() { return taskId_; }
   int getDagId() { return dagId_; }
+  double getTimestamp() { return timestamp_; }
 }

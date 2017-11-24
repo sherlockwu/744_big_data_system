@@ -77,7 +77,6 @@ public class Simulator {
     for (BaseDag dag: runnableJobs) {
       quota.add(((StageDag)dag).getQuota());
     }
-    DataService ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart());
     spillEventQueue_ = new LinkedList<SpillEvent>();
     readyEventQueue_ = new LinkedList<ReadyEvent>();
 
@@ -134,7 +133,7 @@ public class Simulator {
     // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
-
+    DataService ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
 
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);

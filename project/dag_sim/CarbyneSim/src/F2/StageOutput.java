@@ -1,5 +1,6 @@
 package carbyne.F2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -37,7 +38,7 @@ class StageOutput {
   }
 
   public void assignMachines(double[] usage) {
-    Integer[] indexes = IntStream.range(0, 100).boxed().toArray(Integer[]::new);
+    Integer[] indexes = IntStream.range(0, usage.length).boxed().toArray(Integer[]::new);
     Arrays.sort(indexes, new Comparator<Integer>() {
       @Override public int compare(final Integer i, final Integer j) {
         return Double.compare(usage[i], usage[j]);
@@ -46,8 +47,8 @@ class StageOutput {
     for (int i = 0; i < numMachines_; i++) { machineIds_[i] = indexes[i]; }
   }
 
-  public Map<Integer, Double> materialize(Map<Integer, Double> data) {
-    Map<Integer, Double> usage = new HashMap<>();
+  public Map<Integer, Double> materialize(Map<Integer, Double> data, double time) {
+    Map<Integer, Double> machineUsage = new HashMap<>();
     int machineId = -1;
     int partId = -1;
     for (Map.Entry<Integer, Double> entry: data.entrySet()) {
@@ -57,13 +58,13 @@ class StageOutput {
       } else {
         machineId = machineIds_[partId / numGlobalPart_];
       }
-      partitions_[partId].materialize(entry.getKey(), entry.getValue(), machineId, false);
-      if (!usage.containsKey(machineId)) {
-        usage.put(machineId, 0.0);
+      partitions_[partId].materialize(entry.getKey(), entry.getValue(), machineId, false, time);
+      if (!machineUsage.containsKey(machineId)) {
+        machineUsage.put(machineId, 0.0);
       }
-      usage.put(machineId, Double.valueOf(entry.getValue().doubleValue() + usage.get(machineId).doubleValue()));
+      machineUsage.put(machineId, Double.valueOf(entry.getValue().doubleValue() + machineUsage.get(machineId).doubleValue()));
     }
-    return usage;
+    return machineUsage;
   }
 
   public void markComplete() {
@@ -84,5 +85,47 @@ class StageOutput {
       }
     }
     return readyParts;
+  }
+
+  public double getAverageSizeOnMachine(int machineId) {
+    double result = 0.0;
+    for (int i = 0; i < partitions_.length; i++) {
+      result += partitions_[i].getPartitionSizeOnMachine(machineId);
+    }
+    return result / numTotalPartitions_;
+  }
+
+  public double getAverageIncreaseRate(int machineId) {
+    double result = 0.0;
+    for (int i = 0; i < partitions_.length; i++) {
+      result += partitions_[i].getIncreaseRate(machineId);
+    }
+    return result / numTotalPartitions_;
+  }
+
+  public Set<Integer> choosePartitionsToSpread(int machineId) {
+    double threshold = 0.25;
+    Set<Integer> partsToSpreadSet = new HashSet<>();
+    double avgSize = this.getAverageSizeOnMachine(machineId);
+    double avgIncr = this.getAverageIncreaseRate(machineId);
+    for (int i = 0; i < partitions_.length; i++) {
+      if (partitions_[i].getPartitionSizeOnMachine(machineId) > threshold * avgSize ||
+          partitions_[i].getIncreaseRate(machineId) > threshold * avgIncr) {
+        partsToSpreadSet.add(i); 
+      }
+    }
+    return partsToSpreadSet;
+  }
+
+  public Set<Integer> getUsedMachines() {
+    Set<Integer> machineSet = new HashSet<Integer>(Arrays.asList(Arrays.stream(machineIds_).boxed().toArray(Integer[]::new)));
+    for (Map.Entry<Integer, Integer> entry: partitionToMachine_.entrySet()) {
+      machineSet.add(entry.getValue());
+    }
+    return machineSet;
+  }
+  
+  public void spreadPartition(int partitionId, int machineId) {
+    partitionToMachine_.put(partitionId, machineId);
   }
 }
