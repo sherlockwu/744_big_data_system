@@ -30,12 +30,13 @@ public class Machine {
   Resources totalResAlloc;
   // map: expected completion time -> Task context
   public Map<Task, Double> runningTasks;
+  private double diskVolume_;
 
   // intermediate results from tasks (<dagID, Set<taskID>>)
   private Map<Integer, Set<Integer>> intermediateResults; 
 
-  public Machine(int machineId, Resources size, boolean execMode) {
-    LOG.info("Initialize machine: "+machineId+" size:"+size + " execMode:" + execMode);
+  public Machine(int machineId, Resources size, double diskVolume, boolean execMode) {
+    LOG.info("Initialize machine: "+machineId+" "+size + " execMode:" + execMode);
     this.machineId = machineId;
     this.execMode = execMode;
     this.currentTime = Simulator.CURRENT_TIME;
@@ -44,6 +45,7 @@ public class Machine {
     maxResAlloc = Resources.clone(size);
     runningTasks = new HashMap<Task, Double>();
     this.intermediateResults = new HashMap<Integer, Set<Integer>>();
+    this.diskVolume_ = diskVolume;
   }
 
   public double earliestFinishTime() {

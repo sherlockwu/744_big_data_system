@@ -66,8 +66,12 @@ public class Main {
     public static String DataFolder;
     public static String FileInput = "dags-input.txt";
     public static String FileOutput = "dags-output.txt";
-    public static String PathToInputFile = DataFolder + "/" + FileInput;
+    public static String dataInput = "data.json";
+    public static String pathToInputDagFile = DataFolder + "/" + FileInput;
+    public static String pathToInputDataFile = "inputs/data.json";
+    public static String pathToConfig = "inputs/config.json";
 
+    /*
     static {
       switch (runmode) {
       case Robert:
@@ -76,7 +80,7 @@ public class Main {
         DataFolder = root + "/traces";
         FileInput = "50Jobs.txt";
         FileOutput = "dags-output.txt";
-        PathToInputFile = DataFolder + "/" + FileInput;
+        pathToInputDagFile = DataFolder + "/" + FileInput;
 
         SIM_END_TIME = 500000;
         STEP_TIME = 1;
@@ -106,7 +110,7 @@ public class Main {
         LOG.info("Path: " + DataFolder);
         FileInput = "50Jobs.txt";
         FileOutput = "dags-output.txt";
-        PathToInputFile = DataFolder + "/" + FileInput;
+        pathToInputDagFile = DataFolder + "/" + FileInput;
 
         SIM_END_TIME = 50000;
         STEP_TIME = 1;
@@ -131,7 +135,7 @@ public class Main {
       default:
         System.err.println("Unknown runmode");
       }
-    }
+    } */
   }
 
   public static void main(String[] args) {
@@ -151,7 +155,7 @@ public class Main {
         LOG.info(UsageStr);
         System.exit(0);
       }
-      Globals.PathToInputFile = args[curArg];   // pathToInput
+      Globals.pathToInputDagFile = args[curArg];   // pathToInput
       curArg++;
 
       Globals.SIM_END_TIME = 10;
@@ -256,13 +260,14 @@ public class Main {
       Globals.COMPUTE_STATISTICS = compute_stats;
 
     }
+    /* 
     else if (Globals.runmode == RunMode.GenerateTrace) {
       String root = "/u/r/g/rgrandl/School/research/"
           + "bottleneck-agnostic-scheduling/workload";
       Globals.DataFolder = root + "/traces";
       Globals.FileInput = "queries_tpch.txt";
       Globals.FileOutput = "queries_tpch_no_distr.txt";
-      Globals.PathToInputFile = Globals.DataFolder + "/" + Globals.FileInput;
+      Globals.pathToInputDagFile = Globals.DataFolder + "/" + Globals.FileInput;
 
       Globals.NUM_DIMENSIONS = 6;
 
@@ -271,13 +276,13 @@ public class Main {
 
       Utils.generateTrace();
       System.exit(-1);
-    }
+    } */
 
     // print ALL parameters for the record
     System.out.println("=====================");
     System.out.println("Simulation Parameters");
     System.out.println("=====================");
-    System.out.println("PathToInputFile     = " + Globals.PathToInputFile);
+    System.out.println("pathToInputDagFile     = " + Globals.pathToInputDagFile);
     System.out.println("SIMULATION_END_TIME = " + Globals.SIM_END_TIME);
     System.out.println("STEP_TIME           = " + Globals.STEP_TIME);
     System.out.println("NUM_MACHINES        = " + Globals.NUM_MACHINES);

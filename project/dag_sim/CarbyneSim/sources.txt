@@ -10,6 +10,7 @@
 ./src/schedulers/IntraJobScheduler.java
 ./src/schedulers/package-info.java
 ./src/utils/Interval.java
+./src/utils/Configuration.java
 ./src/utils/Randomness.java
 ./src/utils/Triple.java
 ./src/utils/IntervalSet.java
@@ -32,6 +33,12 @@
 ./src/sharepolicies/SJFSharePolicy.java
 ./src/sharepolicies/TetrisUniversalSched.java
 ./src/sharepolicies/package-info.java
+./src/F2/StageOutput.java
+./src/F2/SpillEvent.java
+./src/F2/DataService.java
+./src/F2/Partition.java
+./src/F2/ReadyEvent.java
+./src/F2/ExecuteService.java
 ./src/cluster/Machine.java
 ./src/cluster/Cluster.java
 ./src/cluster/package-info.java

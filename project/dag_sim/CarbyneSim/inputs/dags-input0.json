@@ -3,18 +3,21 @@
     "name": "0",
     "dagID": 0,
     "arrival_time": 0,
+    "quota": 300,
     "stages": [
       {
         "name": "Stage_0",
         "duration": 0.5,
         "resources": [0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "num_tasks": 2
+        "num_tasks": 2,
+        "itm_data": 200
       },
       {
         "name": "Stage_1",
         "duration": 1.1,
         "resources": [0.2, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "num_tasks": 4
+        "num_tasks": 4,
+        "itm_data": 50
       },
       {
         "name": "Stage_2",
@@ -32,6 +35,7 @@
     "name": "1",
     "dagID": 1,
     "arrival_time": 0,
+    "quota": 200,
     "stages": [
       {
         "name": "Stage_0",

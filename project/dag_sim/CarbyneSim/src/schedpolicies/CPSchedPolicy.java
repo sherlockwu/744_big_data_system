@@ -43,7 +43,7 @@ public class CPSchedPolicy extends SchedPolicy {
       }
     });
     Iterator<Integer> iter = rtCopy.iterator();
-    dag.printCPLength();
+    // dag.printCPLength();
     while (iter.hasNext()) {
       int taskId = iter.next();
 

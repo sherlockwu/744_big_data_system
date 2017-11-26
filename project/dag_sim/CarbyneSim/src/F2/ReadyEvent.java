@@ -3,17 +3,21 @@ package carbyne.F2;
 import java.util.List;
 
 public class ReadyEvent {
-  private int gPartitionId_;
-  private List<Integer> partitionLocs_;   // machines
-  private boolean lastPartition_;
+  private int dagId_;
+  private int stageId_;
+  private int partitionId_;
+  private Partition partition_;
 
-  public ReadyEvent(int id, List<Integer> partitionLocs, boolean lastPart) {
-    gPartitionId_ = id;
-    partitionLocs_ = partitionLocs;
-    lastPartition_ = lastPart;
+  public ReadyEvent(int dagId, int stageId, int partitionId, Partition partition) {
+    dagId_ = dagId;
+    stageId_ = stageId;
+    partitionId_ = partitionId;
+    partition_ = partition;
   }
 
-  public int getPartitionId() { return gPartitionId_; }
-  public List<Integer> getPartitionLocs() { return partitionLocs_; }
-  public boolean isLastPartition() { return lastPartition_; }
+  public int getPartitionId() { return partitionId_; }
+  public int getDagId() { return dagId_; }
+  public int getStageId() { return stageId_; }
+  public Partition getPartition() { return partition_; }
+  public boolean isLastPartition() { return partition_.isLastPartReady(); }
 }
