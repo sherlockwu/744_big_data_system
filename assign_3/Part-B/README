@@ -1,0 +1,15 @@
+Application 1
+Logic: Outer join the outdegrees with ranks and then use aggregateMessages in each iteration.
+Run: PartBApplication1Question1.sh
+
+Application 2 Question 1
+Logic: Filter triplets with the src.length > dst.length criterium.
+Run: PartBApplication2Question1.sh
+
+Application 2 Question 2
+Logic: Use outerjoin to create a new graph with VD a (outdegree, numberOfWords) pair. Then reduce the vertices.
+Run: PartBApplication2Question2.sh
+
+Application 2 Question 3
+Logic: Aggregate messages and compute the average
+Run: PartBApplication2Question3.sh
