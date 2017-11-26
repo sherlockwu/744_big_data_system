@@ -18,13 +18,8 @@ object PartBApplication2Question3 {
     val vertices = sc.textFile("/assignment3/PartB/Application2/data/vertices.txt").map(line => line.split(","))
                      .zipWithIndex().map(_.swap)
 
-    val graph = edges.outerJoinVertices(vertices) { (_, _, vData) => 
-      vData match { 
-        case Some(data) => data
-        case None => Array() 
-      }
-    }
-    
+    val graph = Graph(vertices, edges.edges)
+
     // aggregate messages
     val neighborSizes = graph.aggregateMessages[(Int, Double)] (
       triplet => {triplet.sendToDst(1, triplet.srcAttr.length)},

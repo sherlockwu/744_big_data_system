@@ -18,12 +18,7 @@ object PartBApplication2Question2 {
     val vertices = sc.textFile("/assignment3/PartB/Application2/data/vertices.txt").map(line => line.split(","))
                      .zipWithIndex().map(_.swap)
 
-    val graph = edges.outerJoinVertices(vertices) { (_, _, vData) => 
-      vData match { 
-        case Some(data) => data
-        case None => Array() 
-      }
-    }
+    val graph = Graph(vertices, edges.edges)
     
     // build a new graph with VD = <outdegree, num of words>
     val outdegAndSizeGraph = graph.outerJoinVertices(graph.outDegrees){(_, vData, degOpt) => (degOpt.getOrElse(0), vData.length)}.persist()

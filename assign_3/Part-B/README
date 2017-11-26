@@ -13,3 +13,15 @@ Run: PartBApplication2Question2.sh
 Application 2 Question 3
 Logic: Aggregate messages and compute the average
 Run: PartBApplication2Question3.sh
+
+Application 2 Question 4 (Extra credit 1)
+Logic: collect the words in all edges, do a word count and find the maximum
+Run: PartBApplication2Question4.sh
+
+Application 2 Question 5 (Extra credit 2)
+Logic: use the connectedComponents method to get the membership of all vertices and reduce them by the membership
+Run: PartBApplication2Question5.sh
+
+Application 2 Question 6 (Extra credit 3)
+Logic: Based on question 4, just filter all the vertices which does not contain the most popular word.
+Run: PartBApplication2Question6.sh
