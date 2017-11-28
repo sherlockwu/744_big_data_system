@@ -24,7 +24,6 @@ public class ExecuteService {
     interJobScheduler_ = interJobScheduler;
     intraJobScheduler_ = intraJobScheduler;
     runningJobs_ = runningJobs;
-    runningTasks_ = new HashMap<>();
   }
 
   public void receiveReadyEvents(boolean needInterJobScheduling, Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
@@ -44,9 +43,7 @@ public class ExecuteService {
     //fetch data from the partition of this readyEvent
     int dagId = readyEvent.getDagId();
     Partition partition = readyEvent.getPartition();
-    if(!partition.isLastPartReady()) {
-      return;
-    }
+    if(!partition.isLastPartReady()) { return; }
 
     List<Integer> machines = partition.getMachinesInvolved();
     double max = -1;
@@ -60,24 +57,24 @@ public class ExecuteService {
     }
 
     //group up data before executing tasks
+    int taskId = -1;
     if(machines.size() > 1) {
-      groupUpDataForTask(id, machines);
+      taskId = groupUpDataForTask(id, machines);
     }
 
-    //runnable tasks updated in Simulator::updateJobsStatus, need to modify
+    //now runnable tasks updated in Simulator::updateJobsStatus, need to modify
     //so that runnable tasks will be updated according to the ready events
-    schedule(dagId);
+    schedule(dagId, taskId);
   }
 
-  private void groupUpDataForTask(int id, List<Integer> machines) {
+  private int groupUpDataForTask(int id, List<Integer> machines) {
     //copy data to a single node
-    //launch task
-    double expectedTime = 0;
+    //generate task and return Id
     Task task = null;
-    runningTasks_.put(task, expectedTime);
+    return task.taskId;
   }
 
-  private void schedule(int dagId) {
+  private void schedule(int dagId, int taskId) {
     BaseDag dag = null;
     for(BaseDag e : runningJobs_) {
       if(e.getDagId() == dagId) {
@@ -89,7 +86,13 @@ public class ExecuteService {
       System.out.println("Error: Dag is not running any more when trying to schedule");
       return;
     }
+
+    //add taskId to runnable tasks
+    //Should also add duration and rsrcDemands? Because creating new tasks, no related info.
+    dag.runnableTasks.add(taskId);
+
     intraJobScheduler_.schedule((StageDag) dag);
+
   }
 
   private void emitSpillEvents(Queue<SpillEvent> spillEventQueue, double currentTime) {
