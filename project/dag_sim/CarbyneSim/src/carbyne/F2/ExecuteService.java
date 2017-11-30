@@ -9,6 +9,12 @@ import carbyne.schedulers.IntraJobScheduler;
 import javax.crypto.Mac;
 import java.util.*;
 
+/*
+  TODO：
+  1 when to check finished tasks? each ready receiving?
+  2 import topology from simulator?
+  3 test whether tasks are really added to the dag.
+ */
 public class ExecuteService {
 
   private Cluster cluster_;
@@ -40,7 +46,7 @@ public class ExecuteService {
       readyEvent = readyEventQueue.poll();
     }
 
-    emitSpillEvents(spillEventQueue, 0);
+    emitSpillEvents(spillEventQueue);
   }
 
   private void receiveReadyEvent(ReadyEvent readyEvent) {
@@ -77,15 +83,11 @@ public class ExecuteService {
     double newTaskDuration = newRunnableStage.vDuration;
     Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
     Task task = new Task(dagId, getRandom(), newTaskDuration, newTaskRsrcDemands);
+    ((StageDag)dag).addRunnableTask(task, taskId, stageId, stageName);
 
     //now runnable tasks updated in Simulator::updateJobsStatus, need to modify
     //so that runnable tasks will be updated according to the ready events
     schedule(dagId, taskId);
-  }
-
-  int getRandom() {
-    Random rand = new Random();
-    return rand.nextInt(1000);
   }
 
   int updateAncestors(int stageId) {
@@ -115,11 +117,6 @@ public class ExecuteService {
       System.out.println("Error: Dag is not running any more when trying to schedule");
       return;
     }
-
-    //add taskId to runnable tasks
-    //Should also add duration and rsrcDemands? Because creating new tasks, no related info.
-    dag.runnableTasks.add(taskId);
-
     intraJobScheduler_.schedule((StageDag) dag);
 
   }
@@ -135,7 +132,7 @@ public class ExecuteService {
     return dag;
   }
 
-  private void emitSpillEvents(Queue<SpillEvent> spillEventQueue, double currentTime) {
+  private void emitSpillEvents(Queue<SpillEvent> spillEventQueue) {
     //check finish tasks machine by machine
     //when to finish? only on receive ready??
     List<Machine> machines = this.cluster_.getMachinesList();
@@ -146,18 +143,24 @@ public class ExecuteService {
       for(Map.Entry<Integer, List<Integer>> entry : finishedTasksPerMachine.entrySet()) {
         int dagId = entry.getKey();
         List<Integer> tasksFinished = entry.getValue();
-        emit(spillEventQueue, dagId, tasksFinished, currentTime);
+        emit(spillEventQueue, dagId, tasksFinished);
       }
     }
   }
 
-  private void emit(Queue<SpillEvent> spillEventQueue, int dagId, List<Integer> taskFinished, double currentTime) {
+  private void emit(Queue<SpillEvent> spillEventQueue, int dagId, List<Integer> taskFinished) {
     for(Integer taskId : taskFinished) {
       Map<Integer, Double> data = new HashMap<>();
       boolean lastSpill = false;
       int stageId = ((StageDag)getDagById(dagId)).getStageIdByTaskId(taskId);
-      SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, taskId, currentTime);
+      double timestamp = 0;
+      SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, taskId, timestamp);
       spillEventQueue.add(spill);
     }
+  }
+
+  private int getRandom() {
+    Random rand = new Random();
+    return rand.nextInt(1000);
   }
 }

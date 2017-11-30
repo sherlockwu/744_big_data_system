@@ -241,6 +241,12 @@ public class StageDag extends BaseDag {
     stages.get(stage_dst).parents.put(stage_src, d);
   }
 
+  public void addRunnableTask(Task task, int taskId, int stageId, String stageName) {
+    this.runnableTasks.add(taskId);
+    this.idToTask.put(taskId, task);
+    this.vertexToStage.put(stageId, stageName);
+  }
+
   // end read dags from file //
 
   // DAG traversals //

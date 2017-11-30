@@ -123,6 +123,7 @@ public class Simulator {
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
     ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
+    //TODO: export topology to es
     es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs);
 
     interJobSched = new InterJobScheduler(cluster_);
