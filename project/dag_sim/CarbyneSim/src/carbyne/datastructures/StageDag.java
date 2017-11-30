@@ -350,6 +350,10 @@ public class StageDag extends BaseDag {
     }
   }
 
+  public int getStageIdByTaskId(int taskId) {
+    return stages.get(vertexToStage.get(taskId)).id;
+  }
+
   // end DAG traversals //
 
   @Override

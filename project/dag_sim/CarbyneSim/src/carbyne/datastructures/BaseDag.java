@@ -2,10 +2,7 @@ package carbyne.datastructures;
 
 import carbyne.utils.Interval;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public abstract class BaseDag {
 
@@ -48,6 +45,8 @@ public abstract class BaseDag {
   // keep track remaining time from current time given some share
   public double timeToComplete;
 
+  public Map<Integer, Task> idToTask;
+
   public BaseDag(int id, int... arrival) {
     this.dagId = id;
     this.timeArrival = (arrival.length > 0) ? arrival[0] : 0;
@@ -58,6 +57,7 @@ public abstract class BaseDag {
     runnableTasks = new LinkedHashSet<Integer>();
     runningTasks = new LinkedHashSet<Integer>();
     finishedTasks = new LinkedHashSet<Integer>();
+    idToTask = new HashMap<>();
 
     launchedTasksNow = new LinkedHashSet<Integer>();
   }

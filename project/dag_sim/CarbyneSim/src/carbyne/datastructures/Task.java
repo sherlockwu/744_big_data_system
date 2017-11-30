@@ -1,14 +1,19 @@
 package carbyne.datastructures;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Task implements Comparable<Task> {
 
   public int taskId;
   public int dagId;
   public double taskDuration;
   public Resources resDemands;
+  Map<Integer, Double> keyShare;
 
   public Task(int dagId, int taskId) {
     this.dagId = dagId;
+    this.keyShare = new HashMap<>();
     this.taskId = taskId;
   }
 
@@ -17,11 +22,13 @@ public class Task implements Comparable<Task> {
     this.taskId = taskId;
     this.taskDuration = taskDuration;
     this.resDemands = resDemands;
+    this.keyShare = new HashMap<>();
   }
 
   public Task(double taskDuration, Resources resDemands) {
     this.taskDuration = taskDuration;
     this.resDemands = resDemands;
+    this.keyShare = new HashMap<>();
   }
 
   @Override

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Partition {
-  private Map<Integer, Map<Integer, Double>> machineKeySize_;    // <machineId, (key, size)>
+  public Map<Integer, Map<Integer, Double>> machineKeySize_;    // <machineId, (key, size)>
   private double totalSize_;
   private double increaseRate_;
   private boolean complete_;
@@ -62,5 +62,22 @@ public class Partition {
     } else {
       return 0.0;
     }
+  }
+  public void aggregateKeyShareToSingleMachine(int id, List<Integer> machines) {
+    Map<Integer, Double> dest = this.machineKeySize_.get(id);
+    for(Integer i : machines) {
+      Map<Integer, Double> keyShare = this.machineKeySize_.get(i);
+      for(Map.Entry<Integer, Double> entry: keyShare.entrySet()) {
+        int key = entry.getKey();
+        double cur = entry.getValue() + dest.get(key);
+        dest.put(key, cur);
+      }
+    }
+    this.machineKeySize_.clear();
+    this.machineKeySize_.put(id, dest);
+
+    this.machinesInvolved_.clear();
+    this.machinesInvolved_.add(id);
+
   }
 }

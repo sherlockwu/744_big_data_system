@@ -110,6 +110,9 @@ public class Cluster {
   public Collection<Machine> getMachines() {
     return machines;
   }
+  public List<Machine> getMachinesList() {
+    return machines;
+  }
 
   public Resources getClusterMaxResAlloc() {
     Resources maxClusterResAvail = new Resources();
