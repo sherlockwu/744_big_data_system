@@ -12,8 +12,7 @@ import java.util.*;
 /*
   TODO：
   1 when to check finished tasks? each ready receiving?
-  2 import topology from simulator?
-  3 test whether tasks are really added to the dag.
+  2 need to test whether tasks are really added to the dag. see StageDag::addRunnableTask(Task, int, int, String)
  */
 public class ExecuteService {
 
@@ -21,8 +20,7 @@ public class ExecuteService {
   private InterJobScheduler interJobScheduler_;
   private IntraJobScheduler intraJobScheduler_;
   private Queue<BaseDag> runningJobs_;
-  private Map<Integer, Set<Integer>> ancestors;
-  private Map<Integer, Integer> children;
+
   public Map<Task, Double> runningTasks_;
 
   public ExecuteService(Cluster cluster, InterJobScheduler interJobScheduler,
@@ -32,8 +30,6 @@ public class ExecuteService {
     interJobScheduler_ = interJobScheduler;
     intraJobScheduler_ = intraJobScheduler;
     runningJobs_ = runningJobs;
-    ancestors = new HashMap<>();
-    children = new HashMap<>();
   }
 
   public void receiveReadyEvents(boolean needInterJobScheduling, Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
@@ -69,49 +65,57 @@ public class ExecuteService {
       }
     }
 
+    //copy data to a single node if more than 1 machine is data holder
     if(machines.size() > 1) {
-      //copy data to a single node
       partition.aggregateKeyShareToSingleMachine(id, machines);
     }
-    int newRunnableStageId = updateAncestors(stageId);
-    if(newRunnableStageId == -1) //need to wait for other ancestors to complete
+    Set<String> newRunnableStageNames = updateAncestors(stageName, dag);
+    if(newRunnableStageNames.isEmpty()) //no new stage is runnable, need to wait for other ancestors to complete
       return;
+    for(String newRunnableStageName : newRunnableStageNames) {
+      int taskId = getRandom();
+      //assume the stage duration and demands are successfully loaded at the beginning of simulator
+      Stage newRunnableStage = ((StageDag)dag).stages.get(newRunnableStageName);
 
-    int taskId = -1;
-    Stage newRunnableStage = ((StageDag)dag).stages.get(stageName);
+      double newTaskDuration = newRunnableStage.vDuration;
+      Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
+      Task task = new Task(dagId, taskId, newTaskDuration, newTaskRsrcDemands);
+      ((StageDag)dag).addRunnableTask(task, taskId, stageId, newRunnableStageName);
+    }
 
-    double newTaskDuration = newRunnableStage.vDuration;
-    Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
-    Task task = new Task(dagId, getRandom(), newTaskDuration, newTaskRsrcDemands);
-    ((StageDag)dag).addRunnableTask(task, taskId, stageId, stageName);
-
-    //now runnable tasks updated in Simulator::updateJobsStatus, need to modify
-    //so that runnable tasks will be updated according to the ready events
-    schedule(dagId, taskId);
+    schedule(dagId);
   }
 
-  int updateAncestors(int stageId) {
-    if(children.get(stageId) == null) {
+  Set<String> updateAncestors(String stageName, BaseDag dag) {
+    StageDag stageDag = (StageDag) dag;
+    //just to make sure, ancestors is a pointer, not a new map, otherwise line 114 should be modified.
+    Map<String, Set<String>> ancestors = stageDag.ancestorsS;
+    Map<String, Set<String>> children = stageDag.descendantsS;
+    Set<String> result = new HashSet<>();
+    if(children.get(stageName) == null) {
       System.out.println("stage id does not exist, cannot update ancestors");
-      return -1;
+      return result;
     }
-    int candidate = children.get(stageId);
-    Set<Integer> currentAncestors = this.ancestors.get(candidate);
+    Set<String> candidates = children.get(stageName);
+    for(String candidate: candidates) {
+      Set<String> currentAncestors = ancestors.get(candidate);
 
-    if(!currentAncestors.contains(stageId)) {
-      System.out.println("Wrong topology, ancestors and children map conflict");
-      return -1;
-    }
-    currentAncestors.remove(stageId);
-    if(currentAncestors.isEmpty()) {
-      System.out.println("now runnable:" + Integer.toString(candidate));
-    }
+      if (!currentAncestors.contains(stageName)) {
+        System.out.println("Wrong topology, ancestors and children map conflict");
+        return result;
+      }
+      currentAncestors.remove(stageName);
 
-    this.ancestors.put(candidate, new HashSet<>());
-    return candidate;
+      if (currentAncestors.isEmpty()) {
+        System.out.println("now runnable:" + candidate);
+      }
+
+      ancestors.put(candidate, currentAncestors);
+    }
+    return result;
   }
 
-  private void schedule(int dagId, int taskId) {
+  private void schedule(int dagId) {
     BaseDag dag = getDagById(dagId);
     if(dag == null) {
       System.out.println("Error: Dag is not running any more when trying to schedule");
