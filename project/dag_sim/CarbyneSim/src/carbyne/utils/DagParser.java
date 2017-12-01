@@ -57,7 +57,7 @@ public class DagParser {
       for (int i = stage.vids.begin; i <= stage.vids.end; i++)
         dag.vertexToStage.put(i, stage.name);
 
-    dag.scaleDag();
+    // dag.scaleDag();
     dag.setCriticalPaths();
     dag.setBFSOrder();
     for (int taskId : dag.allTasks()) {

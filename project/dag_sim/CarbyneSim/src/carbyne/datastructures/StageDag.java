@@ -1,12 +1,12 @@
 package carbyne.datastructures;
 
+import java.util.logging.Logger;
+
 import carbyne.cluster.Cluster;
 import carbyne.simulator.Main.Globals;
 import carbyne.simulator.Simulator;
 import carbyne.utils.Interval;
-
 import java.util.*;
-import java.util.logging.Logger;
 
 public class StageDag extends BaseDag {
 
@@ -16,6 +16,10 @@ public class StageDag extends BaseDag {
 
   public Map<String, Stage> stages;
   public Map<Integer, String> vertexToStage;  // <vertexId (taskID), stageName vertexId in>
+
+  private Set<String> runnableStages_;
+  private Set<String> runningStages_;
+  private Set<String> finishedStages_;
 
   // keep track of ancestors and descendants of tasks per task
   public Map<Integer, Set<Integer>> ancestorsT, descendantsT,
@@ -35,6 +39,9 @@ public class StageDag extends BaseDag {
     chokePointsS = new HashSet<String>();
     chokePointsT = null;
     quota_ = quota;
+    runnableStages_ = new HashSet<>();
+    runningStages_ = new HashSet<>();
+    finishedStages_ = new HashSet<>();
   }
 
   public StageDag(String dagName, int id, double quota, int... arrival) {
@@ -44,113 +51,66 @@ public class StageDag extends BaseDag {
     chokePointsT = null;
     this.dagName = dagName;
     quota_ = quota;
-  }
-
-  public static StageDag clone(StageDag dag) {
-    StageDag clonedDag = new StageDag(dag.dagId, dag.getQuota());
-    clonedDag.dagName = dag.dagName;
-
-    clonedDag.rsrcQuota = Resources.clone(dag.rsrcQuota);
-    clonedDag.jobExpDur = dag.jobExpDur;
-
-    if (dag.adjustedTaskDemands != null)
-      clonedDag.adjustedTaskDemands = new HashMap<Integer, Task>(
-          dag.adjustedTaskDemands);
-
-    clonedDag.runnableTasks = new LinkedHashSet<Integer>(dag.runnableTasks);
-    clonedDag.runningTasks = new LinkedHashSet<Integer>(dag.runningTasks);
-    clonedDag.finishedTasks = new LinkedHashSet<Integer>(dag.finishedTasks);
-    clonedDag.chokePointsS.addAll(dag.chokePointsS);
-
-    clonedDag.CPlength = new HashMap<Integer, Double>(dag.CPlength);
-    clonedDag.BFSOrder = new HashMap<Integer, Double>(dag.BFSOrder);
-
-    for (Map.Entry<String, Stage> entry : dag.stages.entrySet()) {
-      String stageName = entry.getKey();
-      Stage stage = entry.getValue();
-      clonedDag.stages.put(stageName, Stage.clone(stage));
-    }
-
-    clonedDag.vertexToStage = new HashMap<Integer, String>(dag.vertexToStage);
-    clonedDag.ancestorsS = new HashMap<String, Set<String>>(dag.ancestorsS);
-    clonedDag.descendantsS = new HashMap<String, Set<String>>(dag.descendantsS);
-    clonedDag.unorderedNeighborsS = new HashMap<String, Set<String>>(
-        dag.unorderedNeighborsS);
-
-    clonedDag.ancestorsT = new HashMap<Integer, Set<Integer>>(dag.ancestorsT);
-    clonedDag.descendantsT = new HashMap<Integer, Set<Integer>>(
-        dag.descendantsT);
-
-    return clonedDag;
-  }
-
-  // scale large DAGs to be handled by the simulator
-  public void scaleDag() {
-
-    int numTasksDag = allTasks().size();
-    if (numTasksDag <= Globals.MAX_NUM_TASKS_DAG) {
-      return;
-    }
-
-    double scaleFactor = 1.0;
-    while (true) {
-      scaleFactor *= 1.2;
-      if ((int) Math.ceil((double) numTasksDag / scaleFactor) <= Globals.MAX_NUM_TASKS_DAG)
-        break;
-    }
-
-    Map<Integer, String> vStartIdToStage = new TreeMap<Integer, String>();
-    for (Stage stage : stages.values()) {
-      vStartIdToStage.put(stage.vids.begin, stage.name);
-    }
-
-    Map<String, Integer> numTasksBefore = new HashMap<String, Integer>();
-    int vertexIdxStart = 0, vertexIdxEnd = 0;
-    for (int vIdStart : vStartIdToStage.keySet()) {
-      String stageName = vStartIdToStage.get(vIdStart);
-
-      int numVertices = stages.get(stageName).vids.Length();
-      numTasksBefore.put(stageName, numVertices);
-      numVertices = (int) Math.max(
-          Math.ceil((double) numVertices / scaleFactor), 1);
-      vertexIdxEnd += numVertices;
-
-      stages.get(stageName).vids.begin = vertexIdxStart;
-      stages.get(stageName).vids.end = vertexIdxEnd - 1;
-
-      vertexIdxStart = vertexIdxEnd;
-    }
-
-    // reinitialize the mapping from vertices to stages
-    vertexToStage.clear();
-    for (Stage stage : stages.values()) {
-      for (int i = stage.vids.begin; i <= stage.vids.end; i++) {
-        vertexToStage.put(i, stage.name);
-      }
-    }
-
-    // update vids for dependencies between stages
-    List<Dependency> edges = new ArrayList<Dependency>();
-    for (String stageSrc : stages.keySet()) {
-      for (String stageDst : stages.get(stageSrc).children.keySet()) {
-        edges.add(new Dependency(stageSrc, stageDst,
-            stages.get(stageSrc).children.get(stageDst).type));
-      }
-    }
-
-    // update new edge structure
-    for (String stage : stages.keySet()) {
-      stages.get(stage).children.clear();
-      stages.get(stage).parents.clear();
-    }
-
-    for (Dependency dependency : edges) {
-      this.populateParentsAndChildrenStructure(dependency.parent,
-          dependency.child, dependency.type);
-    }
+    runnableStages_ = new HashSet<>();
+    runningStages_ = new HashSet<>();
+    finishedStages_ = new HashSet<>();
   }
 
   public double getQuota() {return quota_;}
+
+  public void addRunnableStage(String name) {
+    if (stages.containsKey(name)) {
+      runnableStages_.add(name);
+    } else {
+      LOG.severe(name + " is not a valid stage in the current job (" + dagName + ")");
+    }
+  }
+
+  public void moveRunnableToRunning(String name) {
+    if (runnableStages_.contains(name)) {
+      runnableStages_.remove(name);
+      runningStages_.add(name);
+    } else {
+      LOG.severe(name + " is not a valid runnable stage in the current job (" + dagName + ")");
+    }
+  }
+
+  public void moveRunningToFinish(String name) {
+    if (runningStages_.contains(name)) {
+      runningStages_.remove(name);
+      finishedStages_.add(name);
+    } else {
+      LOG.severe(name + " is not a valid running stage in the current job (" + dagName + ")");
+    }
+  }
+
+  public Set<String> updateRunnableStages() {
+    Set<String> newRunnableSet = new HashSet<>();
+    for (Map.Entry<String, Stage> entry: stages.entrySet()) {
+      String name = entry.getKey();
+      if (runnableStages_.contains(name) ||
+          runningStages_.contains(name) ||
+          finishedStages_.contains(name)) continue;
+      if (finishedStages_.containsAll(entry.getValue().parents.keySet())) {
+        runnableStages_.add(name);
+        newRunnableSet.add(name);
+      }
+    }
+    return newRunnableSet;
+  }
+
+  public Set<String> setInitiallyRunnableStages() {
+    Set<String> newRunnableSet = new HashSet<>();
+    for (Map.Entry<String, Stage> entry: stages.entrySet()) {
+      String name = entry.getKey();
+      if (runnableStages_.contains(name) &&
+          entry.getValue().parents.isEmpty()) {
+        newRunnableSet.add(name);
+        runnableStages_.add(name);
+      }
+    }
+    return newRunnableSet;
+  }
 
   // only for tasks that are not running or finished
   public void reverseDag() {
@@ -244,7 +204,8 @@ public class StageDag extends BaseDag {
   public void addRunnableTask(Task task, int taskId, int stageId, String stageName) {
     this.runnableTasks.add(taskId);
     this.idToTask.put(taskId, task);
-    this.vertexToStage.put(stageId, stageName);
+    // this.vertexToStage.put(stageId, stageName);
+    this.vertexToStage.put(taskId, stageName);
   }
 
   // end read dags from file //

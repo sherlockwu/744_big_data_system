@@ -7,23 +7,26 @@ public class SpillEvent {
   private boolean lastSpill_;
   private int dagId_;
   private int stageId_;
+  private String stageName_;
   private int taskId_;
   private double timestamp_;
 
   public SpillEvent(Map<Integer, Double> data, boolean lastSpill,
-      int dagId, int stageId, int taskId, double timestamp) {
+      int dagId, int stageId, String stageName, int taskId, double timestamp) {
     data_ = data;
     lastSpill_ = lastSpill;
     dagId_ = dagId;
     stageId_ = stageId;
+    stageName_ = stageName;
     taskId_ = taskId;
     timestamp_ = timestamp;
   }
 
-  Map<Integer, Double> getData() { return data_; }
-  boolean isLastSpill() { return lastSpill_; }
-  int getStageId() { return stageId_; }
-  int getTaskId() { return taskId_; }
-  int getDagId() { return dagId_; }
-  double getTimestamp() { return timestamp_; }
+  public Map<Integer, Double> getData() { return data_; }
+  public boolean isLastSpill() { return lastSpill_; }
+  public int getStageId() { return stageId_; }
+  public int getTaskId() { return taskId_; }
+  public int getDagId() { return dagId_; }
+  public String getStageName() { return stageName_; }
+  public double getTimestamp() { return timestamp_; }
 }

@@ -8,6 +8,7 @@ import carbyne.schedulers.IntraJobScheduler;
 
 import javax.crypto.Mac;
 import java.util.*;
+import java.util.logging.Logger;
 
 /*
   TODO：
@@ -16,10 +17,12 @@ import java.util.*;
  */
 public class ExecuteService {
 
+  private static Logger LOG = Logger.getLogger(StageDag.class.getName());
   private Cluster cluster_;
   private InterJobScheduler interJobScheduler_;
   private IntraJobScheduler intraJobScheduler_;
   private Queue<BaseDag> runningJobs_;
+  private int nextId_;
 
   public Map<Task, Double> runningTasks_;
 
@@ -30,25 +33,58 @@ public class ExecuteService {
     interJobScheduler_ = interJobScheduler;
     intraJobScheduler_ = intraJobScheduler;
     runningJobs_ = runningJobs;
+    nextId_ = 0;
   }
 
   public void receiveReadyEvents(boolean needInterJobScheduling, Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
+    Map<Integer, Set<String>> dagRunnableStagesMap = new HashMap<>();
+    Set<String> newRunnableStageNameSet = null;
+    int dagId = -1;
     if(needInterJobScheduling) {
       interJobScheduler_.schedule(cluster_);
     }
+    LOG.info("Running jobs size:" + runningJobs_.size());
+    for (BaseDag dag: runningJobs_) {
+      StageDag rDag = (StageDag)dag;
+      dagRunnableStagesMap.put(rDag.getDagId(),
+          rDag.setInitiallyRunnableStages());
+    }
     ReadyEvent readyEvent = readyEventQueue.poll();
     while(readyEvent != null) {
-      receiveReadyEvent(readyEvent);
+      LOG.info("Receive a ready event: " + readyEvent.toString());
+      dagId = readyEvent.getDagId();
+      if (!dagRunnableStagesMap.containsKey(dagId)) {
+        dagRunnableStagesMap.put(dagId, new HashSet<>());
+      }
+      receiveReadyEvent(readyEvent, dagRunnableStagesMap.get(dagId));
       readyEvent = readyEventQueue.poll();
+    }
+
+    for (Map.Entry<Integer, Set<String>> entry: dagRunnableStagesMap.entrySet()) {
+      dagId = entry.getKey();
+      BaseDag dag = getDagById(dagId);
+      newRunnableStageNameSet = entry.getValue();
+      for(String newRunnableStageName : newRunnableStageNameSet) {
+        int taskId = nextId_;
+        nextId_++;
+        //assume the stage duration and demands are successfully loaded at the beginning of simulator
+        Stage newRunnableStage = ((StageDag)dag).stages.get(newRunnableStageName);
+
+        double newTaskDuration = newRunnableStage.vDuration;
+        Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
+        Task task = new Task(dagId, taskId, newTaskDuration, newTaskRsrcDemands);
+        ((StageDag)dag).addRunnableTask(task, taskId, newRunnableStage.id, newRunnableStageName);
+      }
+      schedule(dagId);
     }
 
     emitSpillEvents(spillEventQueue);
   }
 
-  private void receiveReadyEvent(ReadyEvent readyEvent) {
-    //fetch data from the partition of this readyEvent
+  private void receiveReadyEvent(ReadyEvent readyEvent, Set<String> newRunnableStageNameSet) {
     int dagId = readyEvent.getDagId();
     BaseDag dag = getDagById(dagId);
+    //fetch data from the partition of this readyEvent
     int stageId = readyEvent.getStageId();
     String stageName = readyEvent.getStageName();
     Partition partition = readyEvent.getPartition();
@@ -69,30 +105,17 @@ public class ExecuteService {
     if(machines.size() > 1) {
       partition.aggregateKeyShareToSingleMachine(id, machines);
     }
-    Set<String> newRunnableStageNames = updateAncestors(stageName, dag);
-    if(newRunnableStageNames.isEmpty()) //no new stage is runnable, need to wait for other ancestors to complete
-      return;
-    for(String newRunnableStageName : newRunnableStageNames) {
-      int taskId = getRandom();
-      //assume the stage duration and demands are successfully loaded at the beginning of simulator
-      Stage newRunnableStage = ((StageDag)dag).stages.get(newRunnableStageName);
-
-      double newTaskDuration = newRunnableStage.vDuration;
-      Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
-      Task task = new Task(dagId, taskId, newTaskDuration, newTaskRsrcDemands);
-      ((StageDag)dag).addRunnableTask(task, taskId, stageId, newRunnableStageName);
-    }
-
-    schedule(dagId);
+    newRunnableStageNameSet.addAll(updateRunnable(stageName, dag));
   }
 
-  Set<String> updateAncestors(String stageName, BaseDag dag) {
+  Set<String> updateRunnable(String stageName, BaseDag dag) {
     StageDag stageDag = (StageDag) dag;
     //just to make sure, ancestors is a pointer, not a new map, otherwise line 114 should be modified.
-    Map<String, Set<String>> ancestors = stageDag.ancestorsS;
-    Map<String, Set<String>> children = stageDag.descendantsS;
-    Set<String> result = new HashSet<>();
-    if(children.get(stageName) == null) {
+    /* Map<String, Set<String>> ancestors = stageDag.ancestorsS;
+    Map<String, Set<String>> children = stageDag.descendantsS; */
+    stageDag.moveRunningToFinish(stageName);
+    Set<String> result = stageDag.updateRunnableStages();
+    /* if(children.get(stageName) == null) {
       System.out.println("stage id does not exist, cannot update ancestors");
       return result;
     }
@@ -111,7 +134,7 @@ public class ExecuteService {
       }
 
       ancestors.put(candidate, currentAncestors);
-    }
+    } */
     return result;
   }
 
@@ -122,7 +145,6 @@ public class ExecuteService {
       return;
     }
     intraJobScheduler_.schedule((StageDag) dag);
-
   }
 
   private BaseDag getDagById(int dagId) {
@@ -157,8 +179,10 @@ public class ExecuteService {
       Map<Integer, Double> data = new HashMap<>();
       boolean lastSpill = false;
       int stageId = ((StageDag)getDagById(dagId)).getStageIdByTaskId(taskId);
+      String stageName = ((StageDag)getDagById(dagId)).vertexToStage.get(taskId);
       double timestamp = 0;
-      SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, taskId, timestamp);
+      // TODO: add stage name
+      SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, stageName, taskId, timestamp);
       spillEventQueue.add(spill);
     }
   }

@@ -28,14 +28,14 @@ public class DataService {
     while (event != null) {
       readyParts = receiveSpillEvent(event);
       for (Map.Entry<Integer, Partition> part: readyParts.entrySet()) {
-        readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), part.getKey(), part.getValue()));
+        readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), event.getStageName(), part.getKey(), part.getValue()));
       }
       event = spillEventQueue.poll();
     }
   }
 
   public Map<Integer, Partition> receiveSpillEvent(SpillEvent event) {
-    Map<Integer, Partition> readyParts = new HashMap<>();
+    // Map<Integer, Partition> readyParts = new HashMap<>();
     int dagId = event.getDagId();
     int stageId = event.getStageId();
     if (!usagePerJob_.containsKey(dagId)) {

@@ -122,12 +122,12 @@ public class Simulator {
     // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
+    interJobSched = new InterJobScheduler(cluster_);
+    intraJobSched = new IntraJobScheduler(cluster_);
+
     ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
     //TODO: export topology to es
     es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs);
-
-    interJobSched = new InterJobScheduler(cluster_);
-    intraJobSched = new IntraJobScheduler(cluster_);
 
     leftOverResAllocator = new LeftOverResAllocator();
 
@@ -192,6 +192,9 @@ public class Simulator {
         interJobSched.resSharePolicy.packTasks(cluster_);
       } else {
         // TODO: put these scheduling process into ES
+        LOG.info("[Simulator]: jobCompleted:" + jobCompleted
+          + " newJobArrivals:" + newJobArrivals);
+
         es.receiveReadyEvents(needInterJobScheduling, spillEventQueue_, readyEventQueue_);
         ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
         //   Remove the dependency-driven runnable job update. Use ReadyEvent from DS instead.
@@ -206,8 +209,6 @@ public class Simulator {
          */
         /* Added by Hao
 
-        LOG.info("[Simulator]: jobCompleted:" + jobCompleted
-          + " newJobArrivals:" + newJobArrivals);
         if (jobCompleted || newJobArrivals)
           interJobSched.schedule(cluster_);
 
