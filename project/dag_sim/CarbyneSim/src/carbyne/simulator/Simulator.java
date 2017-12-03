@@ -61,7 +61,7 @@ public class Simulator {
     runnableJobs = dagParser.parseDAGSpecFile(Globals.pathToInputDagFile);
     Configuration config = new Configuration();
     config.parseConfigFile(Globals.pathToConfig);
-    double[] shares = dagParser.parseInputData(Globals.pathToInputDataFile);
+    // double[] keySizes = dagParser.parseInputData(Globals.pathToInputDataFile);
     List<Double> quota = new ArrayList<Double>();
     for (BaseDag dag: runnableJobs) {
       quota.add(((StageDag)dag).getQuota());
@@ -69,10 +69,10 @@ public class Simulator {
     spillEventQueue_ = new LinkedList<SpillEvent>();
     readyEventQueue_ = new LinkedList<ReadyEvent>();
 
-    System.out.println("Key shares:");
-    for (int i = 0; i < shares.length; i++) {
-      System.out.print(i + ":" + shares[i] + ", ");
-    }
+    /* System.out.println("Key sizes:");
+    for (int i = 0; i < keySizes.length; i++) {
+      System.out.print(i + ":" + keySizes[i] + ", ");
+    } */
 
     System.out.println("Print DAGs");
       for (BaseDag dag : runnableJobs) {
@@ -122,12 +122,12 @@ public class Simulator {
     // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
-    ds = new DataService(shares, quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
-    //TODO: export topology to es
-    es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs);
-
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);
+
+    ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
+    //TODO: export topology to es
+    es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs, completedJobs, config.getMaxPartitionsPerTask());
 
     leftOverResAllocator = new LeftOverResAllocator();
 
@@ -147,11 +147,15 @@ public class Simulator {
 
       // terminate any task if it can finish and update cluster available
       // resources
-      Map<Integer, List<Integer>> finishedTasks = cluster_.finishTasks();
+      // Map<Integer, List<Integer>> finishedTasks = cluster_.finishTasks();
 
       // update jobs status with newly finished tasks
-      boolean jobCompleted = updateJobsStatus(finishedTasks);
+      // boolean jobCompleted = updateJobsStatus(finishedTasks);
+      // TODO: stop condition
+      boolean jobCompleted = es.finishTasks(spillEventQueue_);
 
+      LOG.info("runnable jobs: " + runnableJobs.size() + ", running jobs: " + runningJobs.size()
+          + ", completed jobs: " + completedJobs.size());
       // stop condition
       if (stop()) {
         System.out.println("==== Final Report: Completed Jobs ====");
@@ -182,105 +186,21 @@ public class Simulator {
       boolean newJobArrivals = handleNewJobArrival();
       boolean needInterJobScheduling = newJobArrivals || jobCompleted;
 
-      if (!jobCompleted && !newJobArrivals && finishedTasks.isEmpty()) {
+      if (!jobCompleted && !newJobArrivals && spillEventQueue_.isEmpty()) {
         LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
             + " ====\n");
         continue;
       }
 
-      if (Globals.TETRIS_UNIVERSAL) {
-        interJobSched.resSharePolicy.packTasks(cluster_);
-      } else {
-        // TODO: put these scheduling process into ES
-        es.receiveReadyEvents(needInterJobScheduling, spillEventQueue_, readyEventQueue_);
-        ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
-        //   Remove the dependency-driven runnable job update. Use ReadyEvent from DS instead.
-        /*
-         * skeleton:
-         * {
-         *   es.receiveReadyEvents(readyEventQueue_);
-         *   es.schedule();
-         *   es.emitSpillEvents(spillEventQueue_);
-         *   ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
-         * }
-         */
-        /* Added by Hao
+      // TODO: put these scheduling process into ES
+      LOG.info("[Simulator]: jobCompleted:" + jobCompleted
+        + " newJobArrivals:" + newJobArrivals);
 
-        LOG.info("[Simulator]: jobCompleted:" + jobCompleted
-          + " newJobArrivals:" + newJobArrivals);
-        if (jobCompleted || newJobArrivals)
-          interJobSched.schedule(cluster_);
+      LOG.info("Spillevent queue size: " + spillEventQueue_.size());
+      ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
+      LOG.info("Readyevent queue size: " + readyEventQueue_.size());
+      es.receiveReadyEvents(needInterJobScheduling, readyEventQueue_);
 
-        LOG.info("Running jobs size:" + runningJobs.size());
-
-        */
-
-        /* System.out.println("After inter-job schedule");
-        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
-        // reallocate the share
-        // interJobSched.adjustShares(cluster_);
-
-        /* System.out.println("After adjust shares");
-        runningJobs.stream().forEach(x -> System.out.println("dag id:" + x.dagId + ", quota:" + x.rsrcQuota + ", usage:" + x.rsrcInUse)); */
-        // do intra-job scheduling for every running job
-
-        /* Added by Hao
-        if (Globals.INTRA_JOB_POLICY != Globals.SchedulingPolicy.Carbyne) {
-
-          for (BaseDag dag : runningJobs) {
-            LOG.info("[Simulator]: intra scheduleDag for:" +
-              dag.dagId);
-            intraJobSched.schedule((StageDag) dag);
-          }
-
-          // if still available resources, go one job at a time and fill if
-          // something. can be scheduled more
-          /* LOG.info("[Simulator]: START work conserving; clusterAvail:"
-              + cluster_.getClusterResAvail());
-
-          // while things can happen, give total resources to a job at a time,
-          // the order is dictated by the inter job scheduler:
-          // Shortest JobFirst - for SJF
-          // RR - for Fair and DRF
-          List<Integer> orderedJobs = interJobSched
-              .orderedListOfJobsBasedOnPolicy();
-          for (int jobId : orderedJobs) {
-            for (BaseDag dag : runningJobs) {
-              if (dag.dagId == jobId) {
-                Resources totalResShare = Resources.clone(dag.rsrcQuota);
-                dag.rsrcQuota = Resources.clone(cluster_.getClusterResAvail());
-                intraJobSched.schedule((StageDag) dag);
-                dag.rsrcQuota = totalResShare;
-                break;
-              }
-            }
-          }
-
-
-          LOG.info("[Simulator]: END work conserving; clusterAvail:"
-              + cluster_.getClusterResAvail()); */
-
-        /* Added by Hao
-
-        } else {
-          // compute if any tasks should be scheduled based on reverse schedule
-          for (BaseDag dag : runningJobs) {
-            dag.timeToComplete = intraJobSched.planSchedule((StageDag) dag, null);
-          }
-          // System.out.println("Tasks which should start as of now:"
-          // + Simulator.tasksToStartNow);
-
-          // schedule the DAGs -> looking at the list of tasksToStartNow
-          for (BaseDag dag : runningJobs) {
-            intraJobSched.schedule((StageDag) dag);
-          }
-
-          // Step2: redistribute the leftOverResources and ensuring is work
-          // conserving
-          leftOverResAllocator.allocLeftOverRsrcs(cluster_);
-
-        } */
-      }
       LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
           + " ====\n");
     }
@@ -291,7 +211,7 @@ public class Simulator {
         .size() == totalReplayedJobs));
   }
 
-  boolean updateJobsStatus(Map<Integer, List<Integer>> finishedTasks) {
+  /* boolean updateJobsStatus(Map<Integer, List<Integer>> finishedTasks) {
     boolean someDagFinished = false;
     if (!finishedTasks.isEmpty()) {
       Iterator<BaseDag> iter = runningJobs.iterator();
@@ -320,7 +240,7 @@ public class Simulator {
       }
     }
     return someDagFinished;
-  }
+  } */
 
   boolean handleNewJobArrival() {
     // flag which specifies if jobs have inter-arrival times or starts at t=0

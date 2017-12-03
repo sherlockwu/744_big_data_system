@@ -98,7 +98,7 @@ public class Utils {
         for (int i = 0; i < Globals.NUM_DIMENSIONS; i++) {
           bw.write(stage.vDemands.resource(i)+" ");
         }
-        bw.write(stage.vids.Length()+"\n");
+        bw.write(stage.getNumTasks()+"\n");
       }
       int numEdges = 0;
       for (Stage stage : dag.stages.values()) {

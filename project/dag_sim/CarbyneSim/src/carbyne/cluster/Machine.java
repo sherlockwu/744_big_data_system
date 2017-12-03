@@ -26,9 +26,6 @@ public class Machine {
   public Map<Task, Double> runningTasks;
   private double diskVolume_;
 
-  // intermediate results from tasks (<dagID, Set<taskID>>)
-  private Map<Integer, Set<Integer>> intermediateResults; 
-
   public Machine(int machineId, Resources size, double diskVolume, boolean execMode) {
     LOG.info("Initialize machine: "+machineId+" "+size + " execMode:" + execMode);
     this.machineId = machineId;
@@ -38,7 +35,6 @@ public class Machine {
     assert size != null;
     maxResAlloc = Resources.clone(size);
     runningTasks = new HashMap<Task, Double>();
-    this.intermediateResults = new HashMap<Integer, Set<Integer>>();
     this.diskVolume_ = diskVolume;
   }
 
@@ -76,6 +72,7 @@ public class Machine {
     Task t = new Task(dagId, taskId, taskDuration, taskResources);
     runningTasks.put(t, expTaskComplTime);
 
+    LOG.info("Assign task " + taskId + " to machine " + machineId);
     // update resource allocated to the corresponding job
     BaseDag dag = Simulator.getDag(dagId);
     dag.rsrcInUse.sum(dag.rsrcDemands(taskId));
@@ -104,7 +101,6 @@ public class Machine {
           tasksFinished.put(t.dagId, new ArrayList<Integer>());
         }
         tasksFinished.get(t.dagId).add(t.taskId);
-        this.storeIntermediateResult(t.dagId, t.taskId);
         // TODO: fix the bug
         // System.out.println("Current Time: " + currentTime);
         // this.printStorage();
@@ -120,39 +116,5 @@ public class Machine {
 
   public int getMachineId() {
     return this.machineId;
-  }
-
-  public Map<Integer, Set<Integer>> getIntermediateResults() {
-    return this.intermediateResults;
-  }
-
-  public void printStorage() {
-    System.out.println("Machine " + machineId + " current storage: ");
-    for (Map.Entry<Integer, Set<Integer>> entry : intermediateResults.entrySet()) {
-      System.out.print("DagID: " + entry.getKey() + "; TaskIDs: ");
-      for (Integer taskId: entry.getValue()) {
-        System.out.print(taskId + ",");
-      }
-      System.out.println("");
-    }
-  }
-
-  public void storeIntermediateResult(int dagId, int taskId) {
-    if (!intermediateResults.containsKey(dagId)) {
-      intermediateResults.put(dagId, new HashSet<Integer>());
-    }
-    intermediateResults.get(dagId).add(taskId);
-  }
-
-  public boolean containsIntermediateResult(int dagId, int taskId) {
-    return intermediateResults.containsKey(dagId) &&
-      intermediateResults.get(dagId).contains(taskId);
-  }
-
-  public boolean containsIntermediateResult(int taskId) {
-    for (Set<Integer> taskIdSet : intermediateResults.values()) {
-      if (taskIdSet.contains(taskId)) return true;
-    }
-    return false;
   }
 }

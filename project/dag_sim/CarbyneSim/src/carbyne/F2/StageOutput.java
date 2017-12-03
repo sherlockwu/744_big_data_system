@@ -18,25 +18,31 @@ class StageOutput {
     numGlobalPart_ = numGlobalPart;
     numTotalPartitions_ = numGlobalPart * numMachines_;
     partitions_ = new Partition[numTotalPartitions_];
+    for (int i = 0; i < numTotalPartitions_; i++) {
+      partitions_[i] = new Partition();
+    }
     partitionToMachine_ = new HashMap<>();
     readyPartitionSet_ = new HashSet<>();
   }
 
   public void setNumMachines(double[] usage, double quota) {
-    numMachines_ = 2;
+    numMachines_ = 0;
     for (int i = 0; i < usage.length; i++) {
       if (usage[i] < 0.75 * quota) numMachines_++;
       if (numMachines_ >= 0.15 * usage.length) break;
     }
+    numMachines_ = Math.max(2, numMachines_);
   }
 
   public void assignMachines(double[] usage) {
+    machineIds_ =  new int[numMachines_];
     Integer[] indexes = IntStream.range(0, usage.length).boxed().toArray(Integer[]::new);
     Arrays.sort(indexes, new Comparator<Integer>() {
       @Override public int compare(final Integer i, final Integer j) {
         return Double.compare(usage[i], usage[j]);
       }
     });
+    System.out.println("machineIds_ size: " + machineIds_.length + ", indexes size: " + usage.length);
     for (int i = 0; i < numMachines_; i++) { machineIds_[i] = indexes[i]; }
   }
 
@@ -51,6 +57,7 @@ class StageOutput {
       } else {
         machineId = machineIds_[partId / numGlobalPart_];
       }
+      
       partitions_[partId].materialize(entry.getKey(), entry.getValue(), machineId, false, time);
       if (!machineUsage.containsKey(machineId)) {
         machineUsage.put(machineId, 0.0);

@@ -33,8 +33,8 @@ public class CPSchedPolicy extends SchedPolicy {
     Collections.sort(rtCopy, new Comparator<Integer>() {
       @Override
       public int compare(Integer arg0, Integer arg1) {
-        Double val0 = dag.CPlength.get(arg0);
-        Double val1 = dag.CPlength.get(arg1);
+        Double val0 = dag.CPlength.get(dag.vertexToStage.get(arg0));
+        Double val1 = dag.CPlength.get(dag.vertexToStage.get(arg1));
         if (val0 > val1)
           return -1;
         if (val0 < val1)
@@ -54,8 +54,15 @@ public class CPSchedPolicy extends SchedPolicy {
         continue;
 
       // try to assign the next task on a machine
-      boolean assigned = cluster_.assignTask(dag.dagId, taskId,
-          dag.duration(taskId), dag.rsrcDemands(taskId));
+      int preferedMachine = dag.getAssignedMachine(taskId);
+      boolean assigned = false;
+      if (preferedMachine == -1) {
+        assigned = cluster_.assignTask(dag.dagId, taskId,
+            dag.duration(taskId), dag.rsrcDemands(taskId));
+      } else {
+        assigned = cluster_.assignTask(preferedMachine, dag.dagId, taskId,
+            dag.duration(taskId), dag.rsrcDemands(taskId));
+      }
 
       if (assigned) {
         // remove the task from runnable and put it in running
@@ -63,6 +70,10 @@ public class CPSchedPolicy extends SchedPolicy {
         dag.launchedTasksNow.add(taskId);
         iter.remove();
         dag.runnableTasks.remove(taskId);
+        String stage = dag.vertexToStage.get(taskId);
+        if (!dag.isRunningStage(stage)) {
+          dag.moveRunnableToRunning(stage);
+        }
       }
     }
 

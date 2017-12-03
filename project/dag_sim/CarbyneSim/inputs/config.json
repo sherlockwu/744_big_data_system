@@ -2,9 +2,10 @@
   "machines": [
     {
       "resources": [0.6, 0.6, 0.6, 0.6, 0.6, 0.6],
-      "disk": 500,
-      "replica": 1
+      "disk": 2000,
+      "replica": 2
     }
   ],
-  "global_partitions_per_machine": 3
+  "global_partitions_per_machine": 2,
+  "max_partitions_in_task": 4
 }

@@ -9,14 +9,15 @@ public abstract class BaseDag {
   public int dagId;
   public int timeArrival;
 
-  public Map<Integer, Double> CPlength, BFSOrder;
+  public Map<Integer, Double> /*CPlength,*/ BFSOrder;
+  public Map<String, Double> CPlength;
 
   public abstract void setCriticalPaths();
   public abstract double totalWorkJob();
   public abstract double getMaxCP();
   public abstract Map<Integer, Double> area();
   
-  public abstract double longestCriticalPath(int taskId);
+  public abstract double longestCriticalPath(String stageName);
 
   public abstract void setBFSOrder();
 
@@ -76,7 +77,7 @@ public abstract class BaseDag {
 
   public void printCPLength() {
     System.out.println("DagID:" + dagId + " critical path lengths");
-    for (Map.Entry<Integer, Double> entry : CPlength.entrySet()) {
+    for (Map.Entry<String, Double> entry : CPlength.entrySet()) {
       System.out.println("task ID:" + entry.getKey() + ", cp length:" + entry.getValue());
     }
   }

@@ -19,15 +19,6 @@ public class Cluster {
 
   private static Logger LOG = Logger.getLogger(Cluster.class.getName());
 
-  /* public Cluster(boolean state, Resources res) {
-    execMode = state;
-    machines = new ArrayList<Machine>();
-    int numberMachines = execMode ? Globals.NUM_MACHINES : 1;
-    for (int i = 0; i < numberMachines; ++i) {
-      machines.add(new Machine(i, res, execMode));
-    }
-  } */
-
   public Cluster(boolean state) {
     execMode = state;
     machines = new ArrayList<Machine>();
@@ -149,12 +140,4 @@ public class Cluster {
   }
 
   // end util classes //
-  public boolean containsIntermediateResult(int taskId) {
-    for (Machine machine: this.machines) {
-      if (machine.containsIntermediateResult(taskId)) {
-        return true;
-      }
-    }
-    return false;
-  }
 }

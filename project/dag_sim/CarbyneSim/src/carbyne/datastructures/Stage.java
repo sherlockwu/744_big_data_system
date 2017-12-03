@@ -12,21 +12,25 @@ public class Stage {
   public int id;
   public String name;
 
-  public Interval vids;
+  private Set<Integer> taskIds_;
 
+  private int numTasks_;    // maximum number of tasks that can be parallelized
+  private double outinRatio_;
   public double vDuration;
   public Resources vDemands;
 
   public Map<String, Dependency> parents, children;  // <stageName, dependency>
 
-  public Stage(String name, int id, Interval vids, double duration,
-      double[] resources) {
+  public Stage(String name, int id, int numTasks, double duration,
+      double[] resources, double outinRatio) {
     this.name = name;
     this.id = id;
-    this.vids = new Interval(vids.begin, vids.end);
+    numTasks_ = numTasks;
+    outinRatio_ = outinRatio;
 
     parents = new HashMap<String, Dependency>();
     children = new HashMap<String, Dependency>();
+    taskIds_ = new HashSet<>();
 
     vDuration = duration;
     vDemands = new Resources(resources);
@@ -34,9 +38,9 @@ public class Stage {
     // System.out.println("New Stage" + this.name + "," + this.id + "," + this.vids + ", Duration:" + vDuration + ",Demands" + vDemands); 
   }
 
-  public static Stage clone(Stage stage) {
-    Stage clonedStage = new Stage(stage.name, stage.id, stage.vids,
-        stage.vDuration, stage.vDemands.resources);
+  /* public static Stage clone(Stage stage) {
+    Stage clonedStage = new Stage(stage.name, stage.id, stage.getNumTasks(),
+        stage.vDuration, stage.vDemands.resources, stage.getIntermediateSize());
 
     clonedStage.parents = new HashMap<String, Dependency>();
     clonedStage.children = new HashMap<String, Dependency>();
@@ -57,34 +61,33 @@ public class Stage {
       clonedStage.children.put(stageName, clonedDep);
     }
     return clonedStage;
+  } */
+
+  public Resources rsrcDemandsPerTask() { return vDemands; }
+
+  public void addTaskId(int tid) {
+    taskIds_.add(tid);
   }
 
-  // task level convenience
-  public double duration(int task) {
-    assert (task >= vids.begin && task <= vids.end);
-    return vDuration;
-  }
+  public int getNumTasks() { return numTasks_; }
 
-  public Resources rsrcDemands(int task) {
-    assert (task >= vids.begin && task <= vids.end);
-    return vDemands;
-  }
+  public double getOutinRatio() { return outinRatio_; }
 
   public Resources totalWork() {
     Resources totalWork = Resources.clone(vDemands);
-    totalWork.multiply(vids.end - vids.begin + 1);
+    totalWork.multiply(numTasks_);
     return totalWork;
   }
 
   public Resources totalWorkInclDur() {
     Resources totalWork = Resources.clone(vDemands);
-    totalWork.multiply((vids.end - vids.begin + 1) * vDuration);
+    totalWork.multiply(numTasks_ * vDuration);
     return totalWork;
   }
 
   public double stageContribToSrtfScore(Set<Integer> consideredTasks) {
     Set<Integer> stageTasks = new HashSet<Integer>();
-    for (int task = vids.begin; task <= vids.end; task++) {
+    for (Integer task: taskIds_) {
       stageTasks.add(task);
     }
     stageTasks.removeAll(consideredTasks);
@@ -101,7 +104,7 @@ public class Stage {
   // for every stage, pass the entire list of running/finished tasks
   public double remTasks(Set<Integer> consideredTasks) {
     Set<Integer> stageTasks = new HashSet<Integer>();
-    for (int task = vids.begin; task <= vids.end; task++) {
+    for (Integer task: taskIds_) {
       stageTasks.add(task);
     }
     stageTasks.removeAll(consideredTasks);

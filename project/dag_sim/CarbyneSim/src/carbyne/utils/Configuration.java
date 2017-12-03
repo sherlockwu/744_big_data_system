@@ -14,6 +14,7 @@ public class Configuration {
   private JSONParser parser_;
   private JSONObject jCfg_;
   private int numGlobalPart_;
+  private int maxPartitionsPerTask_;
 
   private static Logger LOG = Logger.getLogger(Configuration.class.getName());
 
@@ -22,6 +23,7 @@ public class Configuration {
   }
 
   public int getNumGlobalPart() { return numGlobalPart_; }
+  public int getMaxPartitionsPerTask() { return maxPartitionsPerTask_; }
 
   public void parseConfigFile(String filePath) {
     try {
@@ -29,6 +31,7 @@ public class Configuration {
       jCfg_ = (JSONObject)parser_.parse(fr);
       LOG.info("parse configuration file " + filePath);
       numGlobalPart_ = Integer.parseInt(jCfg_.get("global_partitions_per_machine").toString());
+      maxPartitionsPerTask_ = Integer.parseInt(jCfg_.get("max_partitions_in_task").toString());
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
     }
