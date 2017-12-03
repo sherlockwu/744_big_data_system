@@ -125,6 +125,7 @@ public class ExecuteService {
   private InterJobScheduler interJobScheduler_;
   private IntraJobScheduler intraJobScheduler_;
   private Queue<BaseDag> runningJobs_;
+  private Queue<BaseDag> completedJobs_;
   private int nextId_;
   private int maxPartitionsPerTask_;
 
@@ -134,11 +135,12 @@ public class ExecuteService {
 
   public ExecuteService(Cluster cluster, InterJobScheduler interJobScheduler,
                         IntraJobScheduler intraJobScheduler,
-                        Queue<BaseDag> runningJobs, int maxPartitionsPerTask) {
+                        Queue<BaseDag> runningJobs, Queue<BaseDag> completedJobs, int maxPartitionsPerTask) {
     cluster_ = cluster;
     interJobScheduler_ = interJobScheduler;
     intraJobScheduler_ = intraJobScheduler;
     runningJobs_ = runningJobs;
+    completedJobs_ = completedJobs;
     maxPartitionsPerTask_ = maxPartitionsPerTask;
     nextId_ = 0;
     taskOutputs_ = new HashMap<>();
@@ -370,7 +372,8 @@ public class ExecuteService {
     boolean jobCompleted = lastSpill && endStage;
     if (jobCompleted) {
       LOG.info("Job completed. DagId = " + dagId);
-      runnableD
+      runningJobs_.remove(dag);
+      completedJobs_.add(dag);
     }
     return jobCompleted;
   }

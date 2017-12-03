@@ -127,7 +127,7 @@ public class Simulator {
 
     ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
     //TODO: export topology to es
-    es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs, config.getMaxPartitionsPerTask());
+    es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs, completedJobs, config.getMaxPartitionsPerTask());
 
     leftOverResAllocator = new LeftOverResAllocator();
 
@@ -154,6 +154,8 @@ public class Simulator {
       // TODO: stop condition
       boolean jobCompleted = es.finishTasks(spillEventQueue_);
 
+      LOG.info("runnable jobs: " + runnableJobs.size() + ", running jobs: " + runningJobs.size()
+          + ", completed jobs: " + completedJobs.size());
       // stop condition
       if (stop()) {
         System.out.println("==== Final Report: Completed Jobs ====");
