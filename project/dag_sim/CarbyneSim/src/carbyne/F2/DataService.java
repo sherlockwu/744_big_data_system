@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public class DataService {
-  private double[] keyShares_;
   private double[] quota_;  // quota per job
   private int numMachines_;
   private int numGlobalPart_;
@@ -13,8 +12,7 @@ public class DataService {
 
   private static Logger LOG = Logger.getLogger(DataService.class.getName());
 
-  public DataService(double[] keyShares, double[] quota, int numGlobalPart, int numMachines) {
-    keyShares_ = keyShares;
+  public DataService(double[] quota, int numGlobalPart, int numMachines) {
     quota_ = quota;
     numGlobalPart_ = numGlobalPart;
     numMachines_ = numMachines;
@@ -26,6 +24,7 @@ public class DataService {
     SpillEvent event = spillEventQueue.poll();
     Map<Integer, Partition> readyParts = null;
     while (event != null) {
+      LOG.info("Receive spill event: " + event);
       readyParts = receiveSpillEvent(event);
       for (Map.Entry<Integer, Partition> part: readyParts.entrySet()) {
         readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), event.getStageName(), part.getKey(), part.getValue()));

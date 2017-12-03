@@ -14,11 +14,9 @@ import java.util.Queue;
 
 public class DagParser {
   private JSONParser parser_;
-  private int taskIDEnd_;
 
   public DagParser() {
     parser_ = new JSONParser();
-    taskIDEnd_ = 0;
   }
   
   public Queue<BaseDag> parseDAGSpecFile(String filePath) {
@@ -37,9 +35,11 @@ public class DagParser {
   }
 
   public StageDag parseDAG(JSONObject jDag) {
+    double[] keySizes = ((JSONArray)jDag.get("key_sizes")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray();
     StageDag dag = new StageDag(jDag.get("name").toString(), 
         Integer.parseInt(jDag.get("dagID").toString()), 
         Double.parseDouble(jDag.get("quota").toString()),
+        keySizes,
         Integer.parseInt(jDag.get("arrival_time").toString()));
 
     JSONArray jStages = (JSONArray)jDag.get("stages");
@@ -53,9 +53,6 @@ public class DagParser {
     }
 
     dag.vertexToStage = new HashMap<Integer, String>();
-    for (Stage stage : dag.stages.values())
-      for (int i = stage.vids.begin; i <= stage.vids.end; i++)
-        dag.vertexToStage.put(i, stage.name);
 
     // dag.scaleDag();
     dag.setCriticalPaths();
@@ -69,12 +66,11 @@ public class DagParser {
   }
 
   public Stage parseStage(JSONObject jStage, int i) {
-    int taskIDStart = taskIDEnd_;
-    taskIDEnd_ += Integer.parseInt(jStage.get("num_tasks").toString());
-    return new Stage(jStage.get("name").toString(), i,
-          new Interval(taskIDStart, taskIDEnd_ - 1),
+    int numTask = Integer.parseInt(jStage.get("num_tasks").toString());
+    double outinRatio = Double.parseDouble(jStage.get("outin_ratio").toString());
+    return new Stage(jStage.get("name").toString(), i, numTask,
           Double.parseDouble(jStage.get("duration").toString()),
-          ((JSONArray)jStage.get("resources")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray());
+          ((JSONArray)jStage.get("resources")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray(), outinRatio);
   }
 
   public void parseDependency(JSONObject jDep, StageDag dag) {
@@ -83,14 +79,14 @@ public class DagParser {
   }
 
   public double[] parseInputData(String filePath) {
-    double[] shares = null;
+    double[] keySizes = null;
     try {
       FileReader fr = new FileReader(filePath);
       JSONObject jData = (JSONObject)parser_.parse(fr);
-      shares = ((JSONArray)jData.get("share")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray();
+      keySizes = ((JSONArray)jData.get("key_sizes")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray();
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
     }
-    return shares;
+    return keySizes;
   }
 }

@@ -5,6 +5,7 @@ import carbyne.cluster.Machine;
 import carbyne.datastructures.*;
 import carbyne.schedulers.InterJobScheduler;
 import carbyne.schedulers.IntraJobScheduler;
+import carbyne.simulator.Simulator;
 
 import javax.crypto.Mac;
 import java.util.*;
@@ -14,6 +15,108 @@ import java.util.logging.Logger;
   TODO：
   1 when to check finished tasks? each ready receiving?
   2 need to test whether tasks are really added to the dag. see StageDag::addRunnableTask(Task, int, int, String)
+
+  e.x.
+  DAG0: initial data [50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
+  Stage0 --- ata --> Stage1 --- o2o --> Stage2
+  machnines: M1, M2
+  globalpart: 2
+
+  Stage0
+  ES
+  task0
+    - input: (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25)
+    - M1
+    - output: (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25)
+  task1:
+    - input: (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25)
+    - M1
+    - output: (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25)
+
+  spill event1: (0, 0, 0), (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25)
+  spill event2: (0, 0, 1), (0,25), (1,25), (2,25), (3,25), (4,25), (5,25), (6,25), (7,25), (8,25), (9,25) last
+  DS
+  Stage0 Partitions (0, 0)
+  on spill event1 arrival
+M1: Partition[0](:= 0 mod 4) (0, 25), (4, 25), (8, 25)
+    Partition[1](:= 1 mod 4) (1, 25), (5, 25), (9, 25)
+M2: Partition[2](:= 2 mod 4) (2, 25), (6, 25)
+    Partition[2](:= 3 mod 4) (3, 25), (7, 25)
+  on spill event2 arrival
+M1: Partition[0](:= 0 mod 4) (0, 50), (4, 50), (8, 50)
+    Partition[1](:= 1 mod 4) (1, 50), (5, 50), (9, 50)
+M2: Partition[2](:= 2 mod 4) (2, 50), (6, 50)
+    Partition[2](:= 3 mod 4) (3, 50), (7, 50)
+
+
+ ready event1 (0, 0) Partition[0] M1
+ ready event2 (0, 0) Partition[1] M1
+ ready event3 (0, 0) Partition[2] M2
+ ready event4 (0, 0) Partition[3] M2 last
+
+  ES
+  on ready event1 arrival
+  collect (0, 0): incomplete, M1: {P1}
+  on ready event2 arrival
+  collect (0, 0): incomplete, M1: {P1, P2}
+  on ready event3 arrival
+  collect (0, 0): incomplete, M1: {P1, P2}, M2: {P3}
+  on ready event4 arrival
+  collect (0, 0): complete, M1: {P1, P2}, M2: {P3, P4}
+
+  new runnable stages: Stage1
+  Stage1
+  M1
+    task2
+      -input: P1, P2
+      -output: {(0, 25), (4, 25), (8, 25), (1, 25), (5, 25), (9, 25)}
+  M2
+    task3
+      -input: P3, P4
+      -output: {(2, 25), (6, 25), (3, 25), (7, 25)}
+
+  spill event3: (0, 1, 2) {(0, 25), (4, 25), (8, 25), (1, 25), (5, 25), (9, 25)}
+  spill event4: (0, 1, 3) {(2, 25), (6, 25), (3, 25), (7, 25)}  last
+
+  DS 
+  on spill event3 arrival: 
+  Stage 0: ...
+  Stage 1: (0, 1)
+M1: Partition[0](:= 0 mod 4) (0, 25), (4, 25), (8, 25)
+    Partition[1](:= 1 mod 4) (1, 25), (5, 25), (9, 25)
+
+  on spill event4 arrival:
+  Stage 0: ...
+  Stage 1: (0, 1)
+M1: Partition[0](:= 0 mod 4) (0, 25), (4, 25), (8, 25)
+    Partition[1](:= 1 mod 4) (1, 25), (5, 25), (9, 25)
+M2: Partition[2](:= 2 mod 4) (2, 25), (6, 25)
+    Partition[2](:= 3 mod 4) (3, 25), (7, 25)
+
+  ready event5 (0, 1) P1 M1
+  ready event6 (0, 1) P2 M1
+  ready event7 (0, 1) P3 M2
+  ready event8 (0, 1) P4 M2 last
+
+  ES
+  on ready event5 arrival
+  collect (0, 1): incomplete, M1: {P1}
+  on ready event6 arrival
+  collect (0, 1): incomplete, M1: {P1, P2}
+  on ready event7 arrival
+  collect (0, 1): incomplete, M1: {P1, P2}, M2: {P3}
+  collect (0, 1): complete, M1: {P1, P2}, M2: {P3, P4}
+
+  new runnable stages: Stage2
+  Stage2
+  M1
+    task4
+      -input: P1, P2
+  M2
+    task5
+      -input: P3, P4
+
+  end stage (no spill event)
  */
 public class ExecuteService {
 
@@ -23,23 +126,50 @@ public class ExecuteService {
   private IntraJobScheduler intraJobScheduler_;
   private Queue<BaseDag> runningJobs_;
   private int nextId_;
+  private int maxPartitionsPerTask_;
 
-  public Map<Task, Double> runningTasks_;
+  private Map<Integer, Map<Integer, Double>> taskOutputs_;  // (taskId, (key, size))
+  private Map<Integer, Map<String, Integer>> dagStageNumTaskMap_;    // (dagId, stageName, num of tasks)
+  private Map<Integer, Map<String, Map<Integer, Map<Integer, Partition>>>> availablePartitions_; // (dagId, stageName, machineId, paritionId, partition)
 
   public ExecuteService(Cluster cluster, InterJobScheduler interJobScheduler,
                         IntraJobScheduler intraJobScheduler,
-                        Queue<BaseDag> runningJobs) {
+                        Queue<BaseDag> runningJobs, int maxPartitionsPerTask) {
     cluster_ = cluster;
     interJobScheduler_ = interJobScheduler;
     intraJobScheduler_ = intraJobScheduler;
     runningJobs_ = runningJobs;
+    maxPartitionsPerTask_ = maxPartitionsPerTask;
     nextId_ = 0;
+    taskOutputs_ = new HashMap<>();
+    availablePartitions_ = new HashMap<>();
+    dagStageNumTaskMap_ = new HashMap<>();
   }
 
-  public void receiveReadyEvents(boolean needInterJobScheduling, Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
+  private void addPartition(int dagId, String stageName, int machineId, int pid, Partition partition) {
+    Map<String, Map<Integer, Map<Integer, Partition>>> smpp = null;
+    Map<Integer, Map<Integer, Partition>> mpp = null;
+    Map<Integer, Partition> pp = null;
+    if (!availablePartitions_.containsKey(dagId)) {
+      availablePartitions_.put(dagId, new HashMap<>());
+    }
+    smpp = availablePartitions_.get(dagId);
+    if (!smpp.containsKey(stageName)) {
+      smpp.put(stageName, new HashMap<>());
+    }
+    mpp = smpp.get(stageName);
+    if (!mpp.containsKey(machineId)) {
+      mpp.put(machineId, new HashMap<>());
+    }
+    pp = mpp.get(machineId);
+    pp.put(pid, partition);
+  }
+
+  public void receiveReadyEvents(boolean needInterJobScheduling, Queue<ReadyEvent> readyEventQueue) {
     Map<Integer, Set<String>> dagRunnableStagesMap = new HashMap<>();
     Set<String> newRunnableStageNameSet = null;
     int dagId = -1;
+    int taskId = -1;
     if(needInterJobScheduling) {
       interJobScheduler_.schedule(cluster_);
     }
@@ -59,26 +189,85 @@ public class ExecuteService {
       receiveReadyEvent(readyEvent, dagRunnableStagesMap.get(dagId));
       readyEvent = readyEventQueue.poll();
     }
+    LOG.info("Runnable dag stages: " + dagRunnableStagesMap);
 
+    // TODO: collect data and assign tasks
+    //     1. handle data locaility
+    //     2. compute the output key sizes
     for (Map.Entry<Integer, Set<String>> entry: dagRunnableStagesMap.entrySet()) {
       dagId = entry.getKey();
-      BaseDag dag = getDagById(dagId);
+      StageDag dag = getDagById(dagId);
       newRunnableStageNameSet = entry.getValue();
-      for(String newRunnableStageName : newRunnableStageNameSet) {
-        int taskId = nextId_;
-        nextId_++;
+      Map<Integer, Double> taskOutput = null;
+      int totalNumTasks = 0;
+      for(String stageName : newRunnableStageNameSet) {
+        dag.addRunnableStage(stageName);
+        Stage stage = dag.stages.get(stageName);
+        int numTasks = stage.getNumTasks();
+        totalNumTasks = numTasks;
+        if (stage.parents.isEmpty()) {    // start stages
+          double[] keySizesPerTask = Arrays.stream(dag.getInputKeySize()).map(v -> v / stage.getNumTasks()).toArray();
+          while (0 < numTasks--) {
+            taskId = nextId_;
+            nextId_++;
+            // compute output data size
+            if (!taskOutputs_.containsKey(taskId)) {
+              taskOutputs_.put(taskId, new HashMap<>());
+            }
+            taskOutput = taskOutputs_.get(taskId);
+            for (int i = 0; i < keySizesPerTask.length; i++) {
+              taskOutput.put(i, keySizesPerTask[i] * stage.getOutinRatio());
+            }
+            // add runnable task
+            dag.addRunnableTask(taskId, stageName, -1);
+          }
+        } else {   // non-start stages
+          totalNumTasks = 0;
+          System.out.println("availablePartitions_=" + availablePartitions_);
+          // TODO: multiple parents
+          String parent = dag.stages.get(stageName).parents.entrySet().iterator().next().getKey();
+          System.out.println("dagId=" + dagId + ", stageName=" + stageName + ", parent=" + parent);
+          Map<Integer, Map<Integer, Partition>> machinePartMap = availablePartitions_.get(dagId).get(parent);
+          for (Map.Entry<Integer, Map<Integer, Partition>> mchPart: machinePartMap.entrySet()) {
+            int machineId = mchPart.getKey();
+            Map<Integer, Partition> partMap = mchPart.getValue();
+            int count = 0;
+            for (Map.Entry<Integer, Partition> partkv: partMap.entrySet()) {
+              if (count % maxPartitionsPerTask_ == 0) {
+                taskId = nextId_;
+                nextId_++;
+                totalNumTasks++;
+                if (!taskOutputs_.containsKey(taskId)) {
+                  taskOutputs_.put(taskId, new HashMap<>());
+                }
+                taskOutput = taskOutputs_.get(taskId);
+                dag.addRunnableTask(taskId, stageName, machineId);
+                // taskToDag_.add(taskId, dag);
+              }
+              Partition pt = partkv.getValue();
+              Map<Integer, Map<Integer, Double>> data = pt.getData();   // machine, key, size
+              assert data.size() == 1 && data.containsKey(machineId);  // already aggregated
+              Map<Integer, Double> ksMap = data.get(machineId);
+              for (Map.Entry<Integer, Double> ksPair: ksMap.entrySet()) {
+                taskOutput.put(ksPair.getKey(), ksPair.getValue() * stage.getOutinRatio());
+              }
+            }
+          }
+        }
+        if (!dagStageNumTaskMap_.containsKey(dagId)) {
+          dagStageNumTaskMap_.put(dagId, new HashMap<>());
+        }
+        dagStageNumTaskMap_.get(dagId).put(stageName, totalNumTasks);
         //assume the stage duration and demands are successfully loaded at the beginning of simulator
-        Stage newRunnableStage = ((StageDag)dag).stages.get(newRunnableStageName);
 
-        double newTaskDuration = newRunnableStage.vDuration;
+        /* double newTaskDuration = newRunnableStage.vDuration;
         Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
-        Task task = new Task(dagId, taskId, newTaskDuration, newTaskRsrcDemands);
-        ((StageDag)dag).addRunnableTask(task, taskId, newRunnableStage.id, newRunnableStageName);
+        Task task = new Task(dagId, newRunnableStage.id, taskId, newTaskDuration, newTaskRsrcDemands); */
       }
       schedule(dagId);
     }
 
-    emitSpillEvents(spillEventQueue);
+    // emitSpillEvents(spillEventQueue);
   }
 
   private void receiveReadyEvent(ReadyEvent readyEvent, Set<String> newRunnableStageNameSet) {
@@ -88,7 +277,6 @@ public class ExecuteService {
     int stageId = readyEvent.getStageId();
     String stageName = readyEvent.getStageName();
     Partition partition = readyEvent.getPartition();
-    if(!partition.isLastPartReady()) { return; }
 
     List<Integer> machines = partition.getMachinesInvolved();
     double max = -1;
@@ -105,36 +293,17 @@ public class ExecuteService {
     if(machines.size() > 1) {
       partition.aggregateKeyShareToSingleMachine(id, machines);
     }
-    newRunnableStageNameSet.addAll(updateRunnable(stageName, dag));
+    this.addPartition(dagId, stageName, id, readyEvent.getPartitionId(), partition);
+
+    if(partition.isLastPartReady()) {
+      newRunnableStageNameSet.addAll(updateRunnable(stageName, dag));
+    }
   }
 
   Set<String> updateRunnable(String stageName, BaseDag dag) {
     StageDag stageDag = (StageDag) dag;
-    //just to make sure, ancestors is a pointer, not a new map, otherwise line 114 should be modified.
-    /* Map<String, Set<String>> ancestors = stageDag.ancestorsS;
-    Map<String, Set<String>> children = stageDag.descendantsS; */
     stageDag.moveRunningToFinish(stageName);
     Set<String> result = stageDag.updateRunnableStages();
-    /* if(children.get(stageName) == null) {
-      System.out.println("stage id does not exist, cannot update ancestors");
-      return result;
-    }
-    Set<String> candidates = children.get(stageName);
-    for(String candidate: candidates) {
-      Set<String> currentAncestors = ancestors.get(candidate);
-
-      if (!currentAncestors.contains(stageName)) {
-        System.out.println("Wrong topology, ancestors and children map conflict");
-        return result;
-      }
-      currentAncestors.remove(stageName);
-
-      if (currentAncestors.isEmpty()) {
-        System.out.println("now runnable:" + candidate);
-      }
-
-      ancestors.put(candidate, currentAncestors);
-    } */
     return result;
   }
 
@@ -147,7 +316,7 @@ public class ExecuteService {
     intraJobScheduler_.schedule((StageDag) dag);
   }
 
-  private BaseDag getDagById(int dagId) {
+  private StageDag getDagById(int dagId) {
     BaseDag dag = null;
     for(BaseDag e : runningJobs_) {
       if(e.getDagId() == dagId) {
@@ -155,40 +324,49 @@ public class ExecuteService {
         break;
       }
     }
-    return dag;
+    return (StageDag)dag;
   }
 
-  private void emitSpillEvents(Queue<SpillEvent> spillEventQueue) {
-    //check finish tasks machine by machine
-    //when to finish? only on receive ready??
-    List<Machine> machines = this.cluster_.getMachinesList();
-    //iterate machine by machine
-    for(Machine machine : machines) {
-      Map<Integer, List<Integer>> finishedTasksPerMachine = machine.finishTasks();
-      //iterate dag by dag
-      for(Map.Entry<Integer, List<Integer>> entry : finishedTasksPerMachine.entrySet()) {
-        int dagId = entry.getKey();
-        List<Integer> tasksFinished = entry.getValue();
-        emit(spillEventQueue, dagId, tasksFinished);
+  public boolean finishTasks(Queue<SpillEvent> spillEventQueue) {
+    boolean jobCompleted = false;
+    Map<Integer, List<Integer>> finishedTasks = cluster_.finishTasks();
+    for (Map.Entry<Integer, List<Integer>> entry: finishedTasks.entrySet()) {
+      int dagId = entry.getKey();
+      List<Integer> finishedTasksPerDag = entry.getValue();
+      LOG.info("dagId: " + dagId + ", finished tasks: " + finishedTasksPerDag);
+      for (Integer taskId: finishedTasksPerDag) {
+        jobCompleted = jobCompleted || emit(spillEventQueue, dagId, taskId);
       }
     }
+    return jobCompleted;
   }
 
-  private void emit(Queue<SpillEvent> spillEventQueue, int dagId, List<Integer> taskFinished) {
-    for(Integer taskId : taskFinished) {
-      Map<Integer, Double> data = new HashMap<>();
-      boolean lastSpill = false;
-      int stageId = ((StageDag)getDagById(dagId)).getStageIdByTaskId(taskId);
-      String stageName = ((StageDag)getDagById(dagId)).vertexToStage.get(taskId);
-      double timestamp = 0;
-      // TODO: add stage name
-      SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, stageName, taskId, timestamp);
-      spillEventQueue.add(spill);
+  // return whether the dag has finished
+  private boolean emit(Queue<SpillEvent> spillEventQueue, int dagId, int taskId) {
+    Map<Integer, Double> data = taskOutputs_.get(taskId);
+    taskOutputs_.remove(taskId);
+    StageDag dag = getDagById(dagId);
+    int stageId = dag.getStageIdByTaskId(taskId);
+    String stageName = dag.vertexToStage.get(taskId);
+    // decrease the num task until 0
+    LOG.info("Current dag stage num task map:" + dagStageNumTaskMap_);
+    int numRemaingTasks = dagStageNumTaskMap_.get(dagId).get(stageName) - 1;
+    boolean lastSpill = false;
+    if (numRemaingTasks == 0) {
+      lastSpill = true;
+      dagStageNumTaskMap_.get(dagId).remove(stageName);
+    } else {
+      dagStageNumTaskMap_.get(dagId).put(stageName, numRemaingTasks);
     }
+    double timestamp = Simulator.CURRENT_TIME;
+    SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, stageName, taskId, timestamp);
+    LOG.info("new spill event: " + spill);
+    spillEventQueue.add(spill);
+    boolean jobCompleted = lastSpill && dag.stages.get(stageName).children.isEmpty();
+    if (jobCompleted) {
+      LOG.info("Job completed. DagId = " + dagId);
+    }
+    return jobCompleted;
   }
 
-  private int getRandom() {
-    Random rand = new Random();
-    return rand.nextInt(1000);
-  }
 }

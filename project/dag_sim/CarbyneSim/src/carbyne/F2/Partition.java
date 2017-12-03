@@ -80,4 +80,9 @@ public class Partition {
     this.machinesInvolved_.add(id);
 
   }
+
+  @Override
+  public String toString() {
+    return machineKeySize_.toString();
+  }
 }

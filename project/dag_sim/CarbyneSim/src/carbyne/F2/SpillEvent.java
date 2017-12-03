@@ -29,4 +29,9 @@ public class SpillEvent {
   public int getDagId() { return dagId_; }
   public String getStageName() { return stageName_; }
   public double getTimestamp() { return timestamp_; }
+  public void setTimestamp(double timestamp) { timestamp_ = timestamp; }
+
+  public String toString() {
+    return String.format("dagId: %d, stageName: %s, taskId: %d", dagId_, stageName_, taskId_) + ", data: " + data_ + ", lastSpill: " + lastSpill_; 
+  }
 }

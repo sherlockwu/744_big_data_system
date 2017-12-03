@@ -23,6 +23,6 @@ public class ReadyEvent {
   public boolean isLastPartition() { return partition_.isLastPartReady(); }
 
   public String toString() {
-    return String.format("dagId: %d, stageId: %d, stageName: %s, partitionId: %d", dagId_, stageId_, stageName_, partitionId_);
+    return String.format("dagId: %d, stageId: %d, stageName: %s, partitionId: %d", dagId_, stageId_, stageName_, partitionId_) + ", lastReady=" + isLastPartition();
   }
 }
