@@ -151,6 +151,7 @@ public class Simulator {
 
       // update jobs status with newly finished tasks
       // boolean jobCompleted = updateJobsStatus(finishedTasks);
+      // TODO: stop condition
       boolean jobCompleted = es.finishTasks(spillEventQueue_);
 
       // stop condition

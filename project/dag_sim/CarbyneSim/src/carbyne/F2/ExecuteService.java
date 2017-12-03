@@ -242,6 +242,7 @@ public class ExecuteService {
                 }
                 taskOutput = taskOutputs_.get(taskId);
                 dag.addRunnableTask(taskId, stageName, machineId);
+                count++;
                 // taskToDag_.add(taskId, dag);
               }
               Partition pt = partkv.getValue();
@@ -257,6 +258,7 @@ public class ExecuteService {
         if (!dagStageNumTaskMap_.containsKey(dagId)) {
           dagStageNumTaskMap_.put(dagId, new HashMap<>());
         }
+        LOG.info("Stage: " + stageName + ", number of tasks=" + totalNumTasks);
         dagStageNumTaskMap_.get(dagId).put(stageName, totalNumTasks);
         //assume the stage duration and demands are successfully loaded at the beginning of simulator
 
@@ -360,11 +362,15 @@ public class ExecuteService {
     }
     double timestamp = Simulator.CURRENT_TIME;
     SpillEvent spill = new SpillEvent(data, lastSpill, dagId, stageId, stageName, taskId, timestamp);
-    LOG.info("new spill event: " + spill);
-    spillEventQueue.add(spill);
-    boolean jobCompleted = lastSpill && dag.stages.get(stageName).children.isEmpty();
+    boolean endStage = dag.stages.get(stageName).children.isEmpty();
+    if (!endStage) {
+      LOG.info("new spill event: " + spill);
+      spillEventQueue.add(spill);
+    }
+    boolean jobCompleted = lastSpill && endStage;
     if (jobCompleted) {
       LOG.info("Job completed. DagId = " + dagId);
+      runnableD
     }
     return jobCompleted;
   }
