@@ -63,11 +63,8 @@ public class Main {
      * these variables will be set by the static constructor based on runmode
      */
     public static String DataFolder;
-    public static String FileInput = "dags-input.txt";
-    public static String FileOutput = "dags-output.txt";
-    public static String dataInput = "data.json";
-    public static String pathToInputDagFile = DataFolder + "/" + FileInput;
-    public static String pathToInputDataFile = "inputs/data.json";
+    public static String FileOutput;
+    public static String pathToInputDagFile = "inputs/dags-input0.json";
     public static String pathToConfig = "inputs/config.json";
 
     /*
@@ -139,8 +136,8 @@ public class Main {
 
   public static void main(String[] args) {
 
-    String UsageStr = "Usage: java carbyne.simulator.Main pathToInput "
-        + "num_machines resource_size adjust_fungible dag_id_end "
+    String UsageStr = "Usage: java carbyne.simulator.Main pathToConfig pathToDags "
+        + "time_step end_time adjust_fungible dag_id_end "
         + "inter_job_policy=[FAIR | DRF | SJF] "
         + "intra_job_policy=[CARBYNE | TETRIS | CP | BFS | RANDOM]"
         + " level_optimism([0.0 - 1.0])"
@@ -154,27 +151,28 @@ public class Main {
         LOG.info(UsageStr);
         System.exit(0);
       }
+      Globals.pathToConfig = args[curArg];   // pathToConfig
+      curArg++;
+
+      if (args.length == curArg) {
+        LOG.info(UsageStr);
+        System.exit(0);
+      }
       Globals.pathToInputDagFile = args[curArg];   // pathToInput
       curArg++;
 
-      Globals.SIM_END_TIME = 10;
-      Globals.STEP_TIME = 1;
-
-      Globals.NUM_MACHINES = 1;
-      Globals.NUM_DIMENSIONS = 6;
-
       if (args.length == curArg) {
         LOG.info(UsageStr);
         System.exit(0);
       }
-      Globals.NUM_MACHINES = Integer.parseInt(args[curArg]); // num_machines
+      Globals.STEP_TIME = Double.parseDouble(args[curArg]); // time step size
       curArg++;
 
       if (args.length == curArg) {
         LOG.info(UsageStr);
         System.exit(0);
       }
-      Globals.MACHINE_MAX_RESOURCE = Double.parseDouble(args[curArg]); // num_machines
+      Globals.SIM_END_TIME = Double.parseDouble(args[curArg]); // time end
       curArg++;
 
       if (args.length == curArg) {
