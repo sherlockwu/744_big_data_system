@@ -3,7 +3,6 @@
 # tfdefs.sh has helper function to start process on all VMs
 # it contains definition for start_cluster and terminate_cluster
 source tfdefs.sh
-
 terminate_cluster
 # startserver.py has the specifications for the cluster.
 start_cluster startserver.py

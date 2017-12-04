@@ -109,7 +109,7 @@ with g.as_default():
         index = features['index']
         value = features['value']
 
-        sparse_params = tf.gather(w, index.values)
+        sparse_params = tf.gather(params, index.values)
         test_x = value.values
         test_y = tf.cast(label, tf.float32)[0]
 

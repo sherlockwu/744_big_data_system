@@ -1,5 +1,8 @@
-Node: our master node (machine 1 and who has log index 0) has been exhibiting abnormal behavior, so we only have 4 workers output result.
+NOTE: our master node (machine 1 and who has log index 0) has been exhibiting abnormal behavior, so we only have 4 workers output result.
 We have tried every mean but turns out no good even after we reboot the machine.
+
+NOTE: need to have tfdefs.sh and startserver.py in the current dir to execute launch_*.sh
+
 
 run_bigmat.sh: please use this to run mat mul application.
 run_batch_synchronoussgd.sh: please use this to run batch sync sgd.
