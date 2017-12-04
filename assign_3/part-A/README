@@ -1,0 +1,23 @@
+Node: our master node (machine 1 and who has log index 0) has been exhibiting abnormal behavior, so we only have 4 workers output result.
+We have tried every mean but turns out no good even after we reboot the machine.
+
+run_bigmat.sh: please use this to run mat mul application.
+run_batch_synchronoussgd.sh: please use this to run batch sync sgd.
+run_synchronoussgd.sh: please use this to run sync sgd.
+
+
+bigmatrixmultiplication.py: divide the big matrix into small blocks and have the distributed tensorflow to calculate each block independently.
+
+synchronoussgd.py: Spread the data across the cluster, each worker takes their sample from local partition and compute gradients accordingly, in each iteration they wait for the slowest worker and update only after gathering all the information from all servers. Only call it after making sure all the 5 workers have start server locally.
+
+asyncsgd.py: Spread the data across the cluster as well, however, unlike sync sgd, each worker works on their own, they only exchange information by reading and writing from the same TF variable. Use launch_asyncsgd.sh to launch it.
+
+launch_asyncsgd.sh: launch asyncsgd.py.
+
+batchasyncsgd.py: batched version of async sgd, see detail in report.
+
+batchsynchronoussgd.py: batched version of sync sgd, see detail in report.
+
+launch_batchasyncsgd.sh: to launch batchsynchronoussgd.py.
+
+
