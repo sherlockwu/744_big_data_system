@@ -162,11 +162,8 @@ public class StageDag extends BaseDag {
     System.out.println("\n == DAG: " + this.dagId + " ==");
 
     for (Stage stage : stages.values()) {
-      System.out.print("Stage: " + stage.id + " "+stage.name+ " [");
-      System.out.print(stage.vDuration + " ");
-      for (int i = 0; i < Globals.NUM_DIMENSIONS; i++)
-        System.out.print(stage.vDemands.resource(i) + " ");
-      System.out.print("]\n");
+      System.out.print("Stage: " + stage.id + " "+stage.name + ", duration:" + stage.vDuration + ", ");
+      System.out.println(stage.vDemands);
 
       System.out.print("Maximum Parallel Tasks:" + stage.getNumTasks());
 

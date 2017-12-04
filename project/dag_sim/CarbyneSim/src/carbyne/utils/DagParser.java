@@ -3,6 +3,7 @@ package carbyne.utils;
 import carbyne.datastructures.BaseDag;
 import carbyne.datastructures.Stage;
 import carbyne.datastructures.StageDag;
+import carbyne.simulator.Main.Globals;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -68,9 +69,11 @@ public class DagParser {
   public Stage parseStage(JSONObject jStage, int i) {
     int numTask = Integer.parseInt(jStage.get("num_tasks").toString());
     double outinRatio = Double.parseDouble(jStage.get("outin_ratio").toString());
+    double[] resc = ((JSONArray)jStage.get("resources")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray();
+    assert Globals.NUM_DIMENSIONS == resc.length;
     return new Stage(jStage.get("name").toString(), i, numTask,
           Double.parseDouble(jStage.get("duration").toString()),
-          ((JSONArray)jStage.get("resources")).stream().mapToDouble(x -> Double.valueOf(x.toString()) ).toArray(), outinRatio);
+          resc, outinRatio);
   }
 
   public void parseDependency(JSONObject jDep, StageDag dag) {

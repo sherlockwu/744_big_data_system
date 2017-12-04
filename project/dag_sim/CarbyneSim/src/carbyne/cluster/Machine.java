@@ -76,6 +76,7 @@ public class Machine {
     // update resource allocated to the corresponding job
     BaseDag dag = Simulator.getDag(dagId);
     dag.rsrcInUse.sum(dag.rsrcDemands(taskId));
+    LOG.fine("Dag " + dagId + " resource usage: " + dag.rsrcInUse + "; machine resource usage:" + totalResAlloc);
   }
 
   // [dagId -> List<TaskId>]
@@ -96,6 +97,8 @@ public class Machine {
         // update resource freed from corresponding job
         BaseDag dag = Simulator.getDag(t.dagId);
         dag.rsrcInUse.subtract(t.resDemands);
+        LOG.info("Task " + t.taskId + " on machine " + machineId + " finished");
+        LOG.fine("Dag " + dag.dagId + " resource usage: " + dag.rsrcInUse + "; machine resource usage:" + totalResAlloc);
 
         if (tasksFinished.get(t.dagId) == null) {
           tasksFinished.put(t.dagId, new ArrayList<Integer>());

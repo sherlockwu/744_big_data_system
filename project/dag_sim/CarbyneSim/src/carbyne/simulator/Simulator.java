@@ -57,9 +57,9 @@ public class Simulator {
   public Cluster getCluster() { return cluster_; }
 
   public Simulator() {
+    Configuration config = new Configuration();
     DagParser dagParser = new DagParser();
     runnableJobs = dagParser.parseDAGSpecFile(Globals.pathToInputDagFile);
-    Configuration config = new Configuration();
     config.parseConfigFile(Globals.pathToConfig);
     List<Double> quota = new ArrayList<Double>();
     for (BaseDag dag: runnableJobs) {

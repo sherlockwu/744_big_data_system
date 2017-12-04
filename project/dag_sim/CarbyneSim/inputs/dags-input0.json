@@ -9,21 +9,21 @@
       {
         "name": "Stage_0",
         "duration": 0.5,
-        "resources": [0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "resources": [0.1, 0.2],
         "num_tasks": 2,
         "outin_ratio": 1
       },
       {
         "name": "Stage_1",
         "duration": 1.1,
-        "resources": [0.2, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "resources": [0.2, 0.1],
         "num_tasks": 4,
         "outin_ratio": 0.5
       },
       {
         "name": "Stage_2",
         "duration": 0.1,
-        "resources": [0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "resources": [0.1, 0.3],
         "num_tasks": 2,
         "outin_ratio": 0.0
       }

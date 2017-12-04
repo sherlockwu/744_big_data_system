@@ -137,7 +137,7 @@ public class Main {
   public static void main(String[] args) {
 
     String UsageStr = "Usage: java carbyne.simulator.Main pathToConfig pathToDags "
-        + "time_step end_time adjust_fungible dag_id_end "
+        + "resource_dim time_step end_time adjust_fungible dag_id_end "
         + "inter_job_policy=[FAIR | DRF | SJF] "
         + "intra_job_policy=[CARBYNE | TETRIS | CP | BFS | RANDOM]"
         + " level_optimism([0.0 - 1.0])"
@@ -159,6 +159,13 @@ public class Main {
         System.exit(0);
       }
       Globals.pathToInputDagFile = args[curArg];   // pathToInput
+      curArg++;
+
+      if (args.length == curArg) {
+        LOG.info(UsageStr);
+        System.exit(0);
+      }
+      Globals.NUM_DIMENSIONS = Integer.parseInt(args[curArg]); // time step size
       curArg++;
 
       if (args.length == curArg) {
@@ -257,24 +264,7 @@ public class Main {
       Globals.COMPUTE_STATISTICS = compute_stats;
 
     }
-    /* 
-    else if (Globals.runmode == RunMode.GenerateTrace) {
-      String root = "/u/r/g/rgrandl/School/research/"
-          + "bottleneck-agnostic-scheduling/workload";
-      Globals.DataFolder = root + "/traces";
-      Globals.FileInput = "queries_tpch.txt";
-      Globals.FileOutput = "queries_tpch_no_distr.txt";
-      Globals.pathToInputDagFile = Globals.DataFolder + "/" + Globals.FileInput;
-
-      Globals.NUM_DIMENSIONS = 6;
-
-      Globals.DagIdStart = 0;
-      Globals.DagIdEnd = 40;
-
-      Utils.generateTrace();
-      System.exit(-1);
-    } */
-
+    
     // print ALL parameters for the record
     System.out.println("=====================");
     System.out.println("Simulation Parameters");
