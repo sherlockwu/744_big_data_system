@@ -1,9 +1,9 @@
 package carbyne.F2;
 
-import carbyne.datastructures.BaseDag;
-
-import java.util.*;
 import java.util.logging.Logger;
+
+import carbyne.datastructures.BaseDag;
+import java.util.*;
 
 public class DataService {
   private double[] quota_;  // quota per job
@@ -76,9 +76,15 @@ public class DataService {
         return Double.compare(quota_[dagId] - usage[i], quota_[dagId] - usage[j]);
       }
     };
-    for (int i = 0; i < usage.length; i++) {
+    for (int i = 0; i < numMachines_; i++) {
+      if (usage[i] > quota_[dagId]) {
+        String msg = String.format("Dag %d, data usage on machine %d (%f) exceed the quota %f", dagId, i, usage[i], quota_[dagId]);
+        LOG.severe(msg);
+        throw new RuntimeException(msg);
+      }
       if (usage[i] > 0.75 * quota_[dagId]) {
-        LOG.warning(String.format("Dag %d use %f storage of the machine %d, which is above 75% of the quota %f", dagId, usage[i], i, quota_[dagId]));
+        // never goes into this code path
+        LOG.warning(String.format("Dag %d use %f storage of the machine %d, which is above 75%% of the quota %f", dagId, usage[i], i, quota_[dagId]));
         // Choose partitions to spread
         for (Map.Entry<Integer, StageOutput> entry: dagIntermediateData.entrySet()) {
           partsToSpreadSet = entry.getValue().choosePartitionsToSpread(i);
@@ -86,17 +92,25 @@ public class DataService {
           usedMachinesStageSet = entry.getValue().getUsedMachines();
           usedMachinesJobSet.addAll(usedMachinesStageSet);
         }
+        // remove machines that already saturated
+        for (int j = 0; j < numMachines_; j++) {
+          if (usage[j] > 0.75 * quota_[dagId]) {
+            usedMachinesStageSet.remove(j);
+            usedMachinesJobSet.remove(j);
+          }
+        }
         // Choose machines to hold the spreaded partitions
         for (Map.Entry<Integer, Set<Integer>> entry: stagePartsToSpread.entrySet()) {
           stageId = entry.getKey();
           partsToSpreadSet = entry.getValue();
-          machineChosen = Collections.max(usedMachinesStageSet, cmp);
-          if (quota_[dagId] - usage[machineChosen] <= 0) {
+          if (!usedMachinesStageSet.isEmpty()) {
+            machineChosen = Collections.max(usedMachinesStageSet, cmp);
+          } else if (!usedMachinesJobSet.isEmpty()) {
             machineChosen = Collections.max(usedMachinesJobSet, cmp);
           }
-          if (quota_[dagId] - usage[machineChosen] <= 0) {
+          else {
             for (int j = 0; j < numMachines_; j++) {
-              if (!usedMachinesJobSet.contains(j)) {
+              if (usage[j] <= 0.75 * quota_[dagId]) {
                 machineChosen = j;
                 break;
               }
@@ -113,6 +127,7 @@ public class DataService {
     if (event.isLastSpill()) {
        dagIntermediateData.get(stageId).markComplete();
     }
+    LOG.fine("Dag " + dagId + " data usage: [" + Arrays.toString(usage) + "], quota:" + quota_[dagId]);
     return dagIntermediateData.get(stageId).getReadyPartitions();
   }
 }
