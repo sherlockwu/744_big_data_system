@@ -172,7 +172,7 @@ public class ExecuteService {
     for (Map.Entry<Integer, Map<Integer, Partition>> mpEntry : macPart.entrySet()) {
       int machineId = mpEntry.getKey();
       Map<Integer, Partition> partMap = mpEntry.getValue();
-      System.out.print(String.format("Available paritions for dag %d, stage %s, ", dagId, stageName)); 
+      System.out.print(String.format("Available partitions for dag %d, stage %s on machine %d, ", dagId, stageName, machineId)); 
       System.out.println(partMap.keySet().size() + " paritions: " + partMap.keySet());
     }
   }

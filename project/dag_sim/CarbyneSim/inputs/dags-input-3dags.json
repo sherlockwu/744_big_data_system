@@ -3,7 +3,7 @@
     "name": "0",
     "dagID": 0,
     "arrival_time": 0,
-    "quota": 1000,
+    "quota": 400,
     "key_sizes": [50,50,50,50,50,50,50,50,50,50],
     "stages": [
       {
