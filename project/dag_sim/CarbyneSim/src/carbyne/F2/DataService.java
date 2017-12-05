@@ -1,5 +1,7 @@
 package carbyne.F2;
 
+import carbyne.datastructures.BaseDag;
+
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -20,11 +22,21 @@ public class DataService {
     stageOutputPerJob_ = new HashMap<>();
   }
 
+  public void removeCompletedJobs(Queue<BaseDag> completedJobs) {
+    for (BaseDag dag: completedJobs) {
+      if (usagePerJob_.containsKey(dag.dagId)) {
+        LOG.fine("Remove completed dag " + dag.dagId + " data from DS");
+        usagePerJob_.remove(dag.dagId);
+        stageOutputPerJob_.remove(dag.dagId);
+      }
+    }
+  }
+
   public void receiveSpillEvents(Queue<SpillEvent> spillEventQueue, Queue<ReadyEvent> readyEventQueue) {
     SpillEvent event = spillEventQueue.poll();
     Map<Integer, Partition> readyParts = null;
     while (event != null) {
-      LOG.info("Receive spill event: " + event);
+      LOG.info(String.format("Receive spill event %d, %s, %d", event.getDagId(), event.getStageName(), event.getTaskId()));
       readyParts = receiveSpillEvent(event);
       for (Map.Entry<Integer, Partition> part: readyParts.entrySet()) {
         readyEventQueue.add(new ReadyEvent(event.getDagId(), event.getStageId(), event.getStageName(), part.getKey(), part.getValue()));
@@ -34,7 +46,6 @@ public class DataService {
   }
 
   public Map<Integer, Partition> receiveSpillEvent(SpillEvent event) {
-    // Map<Integer, Partition> readyParts = new HashMap<>();
     int dagId = event.getDagId();
     int stageId = event.getStageId();
     if (!usagePerJob_.containsKey(dagId)) {
@@ -67,6 +78,7 @@ public class DataService {
     };
     for (int i = 0; i < usage.length; i++) {
       if (usage[i] > 0.75 * quota_[dagId]) {
+        LOG.warning(String.format("Dag %d use %f storage of the machine %d, which is above 75% of the quota %f", dagId, usage[i], i, quota_[dagId]));
         // Choose partitions to spread
         for (Map.Entry<Integer, StageOutput> entry: dagIntermediateData.entrySet()) {
           partsToSpreadSet = entry.getValue().choosePartitionsToSpread(i);
@@ -91,6 +103,7 @@ public class DataService {
             }
           }
           for (Integer partitionId : partsToSpreadSet) {
+            LOG.warning(String.format("move stage %d, parition %d to machine %d", stageId, partitionId, machineChosen));
             dagIntermediateData.get(stageId).spreadPartition(partitionId, machineChosen);
           }
         }

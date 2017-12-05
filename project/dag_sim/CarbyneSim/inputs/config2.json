@@ -1,0 +1,11 @@
+{
+  "machines": [
+    {
+      "resources": [4, 16],
+      "disk": 2000,
+      "replica": 8
+    }
+  ],
+  "global_partitions_per_machine": 10,
+  "max_partitions_in_task": 4
+}

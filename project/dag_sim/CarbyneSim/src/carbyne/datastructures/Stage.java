@@ -38,31 +38,6 @@ public class Stage {
     // System.out.println("New Stage" + this.name + "," + this.id + "," + this.vids + ", Duration:" + vDuration + ",Demands" + vDemands); 
   }
 
-  /* public static Stage clone(Stage stage) {
-    Stage clonedStage = new Stage(stage.name, stage.id, stage.getNumTasks(),
-        stage.vDuration, stage.vDemands.resources, stage.getIntermediateSize());
-
-    clonedStage.parents = new HashMap<String, Dependency>();
-    clonedStage.children = new HashMap<String, Dependency>();
-
-    for (Map.Entry<String, Dependency> entry : stage.parents.entrySet()) {
-      String stageName = entry.getKey();
-      Dependency dep = entry.getValue();
-      Dependency clonedDep = new Dependency(dep.parent, dep.child, dep.type,
-          dep.parent_ids, dep.child_ids);
-      clonedStage.parents.put(stageName, clonedDep);
-    }
-
-    for (Map.Entry<String, Dependency> entry : stage.children.entrySet()) {
-      String stageName = entry.getKey();
-      Dependency dep = entry.getValue();
-      Dependency clonedDep = new Dependency(dep.parent, dep.child, dep.type,
-          dep.parent_ids, dep.child_ids);
-      clonedStage.children.put(stageName, clonedDep);
-    }
-    return clonedStage;
-  } */
-
   public Resources rsrcDemandsPerTask() { return vDemands; }
 
   public void addTaskId(int tid) {

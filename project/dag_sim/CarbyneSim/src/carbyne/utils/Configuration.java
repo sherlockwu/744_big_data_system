@@ -6,6 +6,7 @@ import carbyne.datastructures.Resources;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import carbyne.simulator.Main.Globals;
 
 import java.io.FileReader;
 import java.util.logging.Logger;
@@ -45,7 +46,9 @@ public class Configuration {
       double[] res = ((JSONArray)jMach.get("resources")).stream()
                       .mapToDouble(x -> Double.valueOf(x.toString()) )
                       .toArray();
+      assert Globals.NUM_DIMENSIONS == res.length;
       int replica = Integer.parseInt(jMach.get("replica").toString());
+      LOG.info("resource:" + res.length);
       for (int j = 0; j < replica; j++) {
         Machine machine = new Machine(nextId, new Resources(res),
             Double.parseDouble(jMach.get("disk").toString()), 

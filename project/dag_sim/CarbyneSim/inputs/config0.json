@@ -1,7 +1,7 @@
 {
   "machines": [
     {
-      "resources": [0.6, 0.6, 0.6, 0.6, 0.6, 0.6],
+      "resources": [4.0, 16.0],
       "disk": 2000,
       "replica": 2
     }

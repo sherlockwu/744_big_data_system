@@ -57,22 +57,16 @@ public class Simulator {
   public Cluster getCluster() { return cluster_; }
 
   public Simulator() {
+    Configuration config = new Configuration();
     DagParser dagParser = new DagParser();
     runnableJobs = dagParser.parseDAGSpecFile(Globals.pathToInputDagFile);
-    Configuration config = new Configuration();
     config.parseConfigFile(Globals.pathToConfig);
-    // double[] keySizes = dagParser.parseInputData(Globals.pathToInputDataFile);
     List<Double> quota = new ArrayList<Double>();
     for (BaseDag dag: runnableJobs) {
       quota.add(((StageDag)dag).getQuota());
     }
     spillEventQueue_ = new LinkedList<SpillEvent>();
     readyEventQueue_ = new LinkedList<ReadyEvent>();
-
-    /* System.out.println("Key sizes:");
-    for (int i = 0; i < keySizes.length; i++) {
-      System.out.print(i + ":" + keySizes[i] + ", ");
-    } */
 
     System.out.println("Print DAGs");
       for (BaseDag dag : runnableJobs) {
@@ -96,21 +90,6 @@ public class Simulator {
         }
         System.out.print("\n");
       }
-      // System.exit(-1);
-      for (BaseDag dag : runnableJobs) {
-        for (int i = 0; i < Globals.NUM_DIMENSIONS; i++) {
-          area_makespan[i] += dag.area().get(i);
-        }
-        double areaJob = (double) Collections.max(dag.area().values()) / Globals.MACHINE_MAX_RESOURCE;
-        double maxCPJob= dag.getMaxCP();
-        System.out.println(dag.dagId+" "+maxCPJob+" "+areaJob);
-        total_area += areaJob;
-      }
-      double max_area_makespan = Double.MIN_VALUE;
-      for (int i = 0; i < Globals.NUM_DIMENSIONS; i++) {
-        max_area_makespan = Math.max(max_area_makespan, area_makespan[i] / Globals.MACHINE_MAX_RESOURCE);
-      }
-      System.out.println("makespan_lb: "+ total_area + " " + max_area_makespan);
       System.exit(-1);
     }
 
@@ -118,15 +97,12 @@ public class Simulator {
     runningJobs = new LinkedList<BaseDag>();
     completedJobs = new LinkedList<BaseDag>();
 
-    // every machine has capacity == 1
-    // cluster_ = new Cluster(true, new Resources(Globals.MACHINE_MAX_RESOURCE));
     cluster_ = new Cluster(true);
     config.populateCluster(cluster_);
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);
 
     ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
-    //TODO: export topology to es
     es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs, completedJobs, config.getMaxPartitionsPerTask());
 
     leftOverResAllocator = new LeftOverResAllocator();
@@ -147,12 +123,10 @@ public class Simulator {
 
       // terminate any task if it can finish and update cluster available
       // resources
-      // Map<Integer, List<Integer>> finishedTasks = cluster_.finishTasks();
 
       // update jobs status with newly finished tasks
-      // boolean jobCompleted = updateJobsStatus(finishedTasks);
-      // TODO: stop condition
       boolean jobCompleted = es.finishTasks(spillEventQueue_);
+      ds.removeCompletedJobs(completedJobs);
 
       LOG.info("runnable jobs: " + runnableJobs.size() + ", running jobs: " + runningJobs.size()
           + ", completed jobs: " + completedJobs.size());
@@ -192,7 +166,6 @@ public class Simulator {
         continue;
       }
 
-      // TODO: put these scheduling process into ES
       LOG.info("[Simulator]: jobCompleted:" + jobCompleted
         + " newJobArrivals:" + newJobArrivals);
 
@@ -200,6 +173,7 @@ public class Simulator {
       ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
       LOG.info("Readyevent queue size: " + readyEventQueue_.size());
       es.receiveReadyEvents(needInterJobScheduling, readyEventQueue_);
+      es.schedule();
 
       LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
           + " ====\n");
@@ -210,37 +184,6 @@ public class Simulator {
     return (runnableJobs.isEmpty() && runningJobs.isEmpty() && (completedJobs
         .size() == totalReplayedJobs));
   }
-
-  /* boolean updateJobsStatus(Map<Integer, List<Integer>> finishedTasks) {
-    boolean someDagFinished = false;
-    if (!finishedTasks.isEmpty()) {
-      Iterator<BaseDag> iter = runningJobs.iterator();
-      while (iter.hasNext()) {
-        BaseDag crdag = iter.next();
-        if (finishedTasks.get(crdag.dagId) == null) {
-          continue;
-        }
-
-        System.out.print("DAG:" + crdag.dagId + ": "
-            + finishedTasks.get(crdag.dagId).size()
-            + " tasks finished at time:" + Simulator.CURRENT_TIME + ": [");
-        finishedTasks.get(crdag.dagId).stream().forEach(taskId -> System.out.print(taskId + ","));
-        System.out.println("]");
-        someDagFinished = ((StageDag) crdag).finishTasks(cluster_,
-            finishedTasks.get(crdag.dagId), false);
-
-        if (someDagFinished) {
-          System.out.println("DAG:" + crdag.dagId + " finished at time:"
-              + Simulator.CURRENT_TIME);
-          nextTimeToLaunchJob = Simulator.CURRENT_TIME;
-          completedJobs.add(crdag);
-
-          iter.remove();
-        }
-      }
-    }
-    return someDagFinished;
-  } */
 
   boolean handleNewJobArrival() {
     // flag which specifies if jobs have inter-arrival times or starts at t=0

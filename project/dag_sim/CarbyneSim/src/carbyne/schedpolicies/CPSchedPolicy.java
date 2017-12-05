@@ -9,11 +9,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 
+import java.util.logging.Logger;
 /**
  * CP scheduling class
  * */
 public class CPSchedPolicy extends SchedPolicy {
 
+  private static Logger LOG = Logger.getLogger(CPSchedPolicy.class.getName());
   public CPSchedPolicy(Cluster cluster) {
     super(cluster);
   }
@@ -22,6 +24,7 @@ public class CPSchedPolicy extends SchedPolicy {
   public void schedule(final StageDag dag) {
 
     // no tasks to be scheduled -> skip
+    LOG.fine("Dag: " + dag.dagId + " runnable tasks:" + dag.runnableTasks.size());
     if (dag.runnableTasks.isEmpty())
       return;
 
@@ -50,8 +53,10 @@ public class CPSchedPolicy extends SchedPolicy {
       // discard tasks whose resource requirements are larger than total share
       boolean fit = dag.currResShareAvailable().greaterOrEqual(
           dag.rsrcDemands(taskId));
-      if (!fit)
+      if (!fit) {
+        LOG.finest("Task " + taskId + " does not fit quota " + dag.dagId + ". task resource demands: " + dag.rsrcDemands(taskId) + " dag resource available: " + dag.currResShareAvailable());
         continue;
+      }
 
       // try to assign the next task on a machine
       int preferedMachine = dag.getAssignedMachine(taskId);

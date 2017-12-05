@@ -7,7 +7,7 @@ import java.util.*;
 public abstract class BaseDag {
 
   public int dagId;
-  public int timeArrival;
+  public double timeArrival;
 
   public Map<Integer, Double> /*CPlength,*/ BFSOrder;
   public Map<String, Double> CPlength;
@@ -48,7 +48,7 @@ public abstract class BaseDag {
 
   public Map<Integer, Task> idToTask;
 
-  public BaseDag(int id, int... arrival) {
+  public BaseDag(int id, double... arrival) {
     this.dagId = id;
     this.timeArrival = (arrival.length > 0) ? arrival[0] : 0;
 

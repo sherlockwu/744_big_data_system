@@ -167,6 +167,16 @@ public class ExecuteService {
     pp.put(pid, partition);
   }
 
+  public void printAvailablePartition(int dagId, String stageName) {
+    Map<Integer, Map<Integer, Partition>> macPart = availablePartitions_.get(dagId).get(stageName);
+    for (Map.Entry<Integer, Map<Integer, Partition>> mpEntry : macPart.entrySet()) {
+      int machineId = mpEntry.getKey();
+      Map<Integer, Partition> partMap = mpEntry.getValue();
+      System.out.print(String.format("Available paritions for dag %d, stage %s, ", dagId, stageName)); 
+      System.out.println(partMap.keySet().size() + " paritions: " + partMap.keySet());
+    }
+  }
+
   public void receiveReadyEvents(boolean needInterJobScheduling, Queue<ReadyEvent> readyEventQueue) {
     Map<Integer, Set<String>> dagRunnableStagesMap = new HashMap<>();
     Set<String> newRunnableStageNameSet = null;
@@ -225,10 +235,13 @@ public class ExecuteService {
           }
         } else {   // non-start stages
           totalNumTasks = 0;
-          System.out.println("availablePartitions_=" + availablePartitions_);
+          // System.out.println("availablePartitions_=" + availablePartitions_);
           // TODO: multiple parents
-          String parent = dag.stages.get(stageName).parents.entrySet().iterator().next().getKey();
-          System.out.println("dagId=" + dagId + ", stageName=" + stageName + ", parent=" + parent);
+          Set<String> parents = dag.stages.get(stageName).parents.keySet();
+          assert parents.size() == 1;
+          String parent = parents.iterator().next();
+          System.out.println("dagId=" + dagId + ", stageName=" + stageName + ", parent(s)=" + parent);
+          printAvailablePartition(dagId, parent);
           Map<Integer, Map<Integer, Partition>> machinePartMap = availablePartitions_.get(dagId).get(parent);
           for (Map.Entry<Integer, Map<Integer, Partition>> mchPart: machinePartMap.entrySet()) {
             int machineId = mchPart.getKey();
@@ -244,9 +257,8 @@ public class ExecuteService {
                 }
                 taskOutput = taskOutputs_.get(taskId);
                 dag.addRunnableTask(taskId, stageName, machineId);
-                count++;
-                // taskToDag_.add(taskId, dag);
               }
+              count++;
               Partition pt = partkv.getValue();
               Map<Integer, Map<Integer, Double>> data = pt.getData();   // machine, key, size
               assert data.size() == 1 && data.containsKey(machineId);  // already aggregated
@@ -260,18 +272,10 @@ public class ExecuteService {
         if (!dagStageNumTaskMap_.containsKey(dagId)) {
           dagStageNumTaskMap_.put(dagId, new HashMap<>());
         }
-        LOG.info("Stage: " + stageName + ", number of tasks=" + totalNumTasks);
+        LOG.info("Dag: " + dagId + " Stage: " + stageName + ", number of runnable tasks=" + totalNumTasks);
         dagStageNumTaskMap_.get(dagId).put(stageName, totalNumTasks);
-        //assume the stage duration and demands are successfully loaded at the beginning of simulator
-
-        /* double newTaskDuration = newRunnableStage.vDuration;
-        Resources newTaskRsrcDemands = new Resources(newRunnableStage.vDemands);
-        Task task = new Task(dagId, newRunnableStage.id, taskId, newTaskDuration, newTaskRsrcDemands); */
       }
-      schedule(dagId);
     }
-
-    // emitSpillEvents(spillEventQueue);
   }
 
   private void receiveReadyEvent(ReadyEvent readyEvent, Set<String> newRunnableStageNameSet) {
@@ -311,6 +315,14 @@ public class ExecuteService {
     return result;
   }
 
+  public void schedule() {
+    LOG.info("running jobs: " + runningJobs_.size());
+    for (BaseDag dag: runningJobs_) {
+      LOG.info("schedule dag: " + dag.dagId);
+      intraJobScheduler_.schedule((StageDag) dag);
+    }
+  }
+
   private void schedule(int dagId) {
     BaseDag dag = getDagById(dagId);
     if(dag == null) {
@@ -338,8 +350,12 @@ public class ExecuteService {
       int dagId = entry.getKey();
       List<Integer> finishedTasksPerDag = entry.getValue();
       LOG.info("dagId: " + dagId + ", finished tasks: " + finishedTasksPerDag);
+      StageDag dag = getDagById(dagId);
       for (Integer taskId: finishedTasksPerDag) {
         jobCompleted = jobCompleted || emit(spillEventQueue, dagId, taskId);
+        // move running tasks to finished tasks
+        dag.runningTasks.remove(taskId);
+        dag.finishedTasks.add(taskId);
       }
     }
     return jobCompleted;
@@ -372,6 +388,7 @@ public class ExecuteService {
     boolean jobCompleted = lastSpill && endStage;
     if (jobCompleted) {
       LOG.info("Job completed. DagId = " + dagId);
+      dag.jobEndTime = timestamp;
       runningJobs_.remove(dag);
       completedJobs_.add(dag);
     }
