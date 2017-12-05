@@ -38,7 +38,6 @@ public class Main {
 
     public static int NUM_MACHINES, NUM_DIMENSIONS;
     public static double MACHINE_MAX_RESOURCE;
-    public static int DagIdStart, DagIdEnd;
 
     public static boolean ADJUST_FUNGIBLE = false;
 
@@ -66,78 +65,12 @@ public class Main {
     public static String FileOutput;
     public static String pathToInputDagFile = "inputs/dags-input0.json";
     public static String pathToConfig = "inputs/config.json";
-
-    /*
-    static {
-      switch (runmode) {
-      case Robert:
-        String root = "/u/r/g/rgrandl/School/research/"
-            + "bottleneck-agnostic-scheduling/workload";
-        DataFolder = root + "/traces";
-        FileInput = "50Jobs.txt";
-        FileOutput = "dags-output.txt";
-        pathToInputDagFile = DataFolder + "/" + FileInput;
-
-        SIM_END_TIME = 500000;
-        STEP_TIME = 1;
-
-        NUM_MACHINES = 1;
-        NUM_DIMENSIONS = 6;
-        MACHINE_MAX_RESOURCE = 100;
-
-        ADJUST_FUNGIBLE = false;
-        JOBS_ARRIVAL_POLICY = JobsArrivalPolicy.All;
-
-        DagIdStart = 0;
-        DagIdEnd = 50;
-
-        INTER_JOB_POLICY = SharingPolicy.Fair;
-        INTRA_JOB_POLICY = SchedulingPolicy.CP;
-
-        // sensitivity
-        LEVEL_OF_OPTIMISM = 1.0;
-        TETRIS_UNIVERSAL = false;
-        COMPUTE_STATISTICS = true;
-        ERROR = 0.0;
-        break;
-      case Mosharaf:
-        String root1 = "/Users/mosharaf/Dropbox/Carbyne/";
-        DataFolder = root1 + "workload/traces";
-        LOG.info("Path: " + DataFolder);
-        FileInput = "50Jobs.txt";
-        FileOutput = "dags-output.txt";
-        pathToInputDagFile = DataFolder + "/" + FileInput;
-
-        SIM_END_TIME = 50000;
-        STEP_TIME = 1;
-
-        NUM_MACHINES = 1;
-        NUM_DIMENSIONS = 6;
-        MACHINE_MAX_RESOURCE = 100.0;
-
-        ADJUST_FUNGIBLE = false;
-        JOBS_ARRIVAL_POLICY = JobsArrivalPolicy.Trace;
-
-        DagIdStart = 0;
-        DagIdEnd = 1;
-
-        INTER_JOB_POLICY = SharingPolicy.Fair;
-        INTRA_JOB_POLICY = SchedulingPolicy.Carbyne;
-        break;
-      case CommandLine:
-        break;
-      case GenerateTrace:
-        break;
-      default:
-        System.err.println("Unknown runmode");
-      }
-    } */
   }
 
   public static void main(String[] args) {
 
     String UsageStr = "Usage: java carbyne.simulator.Main pathToConfig pathToDags "
-        + "resource_dim time_step end_time adjust_fungible dag_id_end "
+        + "resource_dim time_step end_time adjust_fungible "
         + "inter_job_policy=[FAIR | DRF | SJF] "
         + "intra_job_policy=[CARBYNE | TETRIS | CP | BFS | RANDOM]"
         + " level_optimism([0.0 - 1.0])"
@@ -190,14 +123,6 @@ public class Main {
       curArg++;
 
       Globals.JOBS_ARRIVAL_POLICY = JobsArrivalPolicy.Trace;
-
-      Globals.DagIdStart = 0;
-      if (args.length == curArg) {
-        LOG.info(UsageStr);
-        System.exit(0);
-      }
-      Globals.DagIdEnd = Integer.parseInt(args[curArg]);  // dag_id_end
-      curArg++;
 
       if (args.length == curArg) {
         LOG.info(UsageStr);
@@ -277,8 +202,6 @@ public class Main {
     System.out.println("MACHINE_MAX_RESOURCE= " + Globals.MACHINE_MAX_RESOURCE);
     System.out.println("ADJUST_FUNGIBLE     = " + Globals.ADJUST_FUNGIBLE);
     System.out.println("JOBS_ARRIVAL_POLICY = " + Globals.JOBS_ARRIVAL_POLICY);
-    System.out.println("DagIdStart          = " + Globals.DagIdStart);
-    System.out.println("DagIdEnd            = " + Globals.DagIdEnd);
     System.out.println("INTER_JOB_POLICY    = " + Globals.INTER_JOB_POLICY);
     System.out.println("INTRA_JOB_POLICY    = " + Globals.INTRA_JOB_POLICY);
     System.out.println("LEVEL_OF_OPTIMISM   = " + Globals.LEVEL_OF_OPTIMISM);

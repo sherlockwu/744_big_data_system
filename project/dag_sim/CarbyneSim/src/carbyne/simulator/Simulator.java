@@ -126,6 +126,7 @@ public class Simulator {
 
       // update jobs status with newly finished tasks
       boolean jobCompleted = es.finishTasks(spillEventQueue_);
+      ds.removeCompletedJobs(completedJobs);
 
       LOG.info("runnable jobs: " + runnableJobs.size() + ", running jobs: " + runningJobs.size()
           + ", completed jobs: " + completedJobs.size());
@@ -172,6 +173,7 @@ public class Simulator {
       ds.receiveSpillEvents(spillEventQueue_, readyEventQueue_);
       LOG.info("Readyevent queue size: " + readyEventQueue_.size());
       es.receiveReadyEvents(needInterJobScheduling, readyEventQueue_);
+      es.schedule();
 
       LOG.info("\n==== END STEP_TIME:" + Simulator.CURRENT_TIME
           + " ====\n");

@@ -35,7 +35,7 @@ public class StageDag extends BaseDag {
   // keep track of adjusted profiles for certain tasks;
   public Map<Integer, Task> adjustedTaskDemands = null;
 
-  public StageDag(String dagName, int id, double quota, double[] inputKeySizes, int... arrival) {
+  public StageDag(String dagName, int id, double quota, double[] inputKeySizes, double... arrival) {
     super(id, arrival);
     stages = new HashMap<String, Stage>();
     chokePointsS = new HashSet<String>();
@@ -387,6 +387,14 @@ public class StageDag extends BaseDag {
     return vertexToStage.keySet();
   }
 
+  public int numTotalTasks() {
+    int n = 0;
+    for (Stage stage : stages.values()) {
+      n += stage.getNumTasks();
+    }
+    return n;
+  }
+
   public Set<Integer> remTasksToSchedule() {
     Set<Integer> allTasks = new HashSet<Integer>(vertexToStage.keySet());
     Set<Integer> consideredTasks = new HashSet<Integer>(this.finishedTasks);
@@ -449,11 +457,13 @@ public class StageDag extends BaseDag {
   public Resources currResShareAvailable() {
     Resources totalShareAllocated = Resources.clone(this.rsrcQuota);
 
-    for (int task : launchedTasksNow) {
+    for (int task: runningTasks) {
       Resources rsrcDemandsTask = rsrcDemands(task);
       totalShareAllocated.subtract(rsrcDemandsTask);
     }
-    totalShareAllocated.normalize();
+    LOG.finest("Dag: " + dagId + " compute resource available." + 
+    " quota: " + rsrcQuota + "available: " + totalShareAllocated + "running tasks:" + runningTasks.size());
+    totalShareAllocated.normalize();  // change <0 to 0
     return totalShareAllocated;
   }
 

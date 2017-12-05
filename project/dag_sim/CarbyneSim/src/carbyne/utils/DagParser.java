@@ -41,7 +41,7 @@ public class DagParser {
         Integer.parseInt(jDag.get("dagID").toString()), 
         Double.parseDouble(jDag.get("quota").toString()),
         keySizes,
-        Integer.parseInt(jDag.get("arrival_time").toString()));
+        Double.parseDouble(jDag.get("arrival_time").toString()));
 
     JSONArray jStages = (JSONArray)jDag.get("stages");
     for (int i = 0; i < jStages.size(); i++) {
