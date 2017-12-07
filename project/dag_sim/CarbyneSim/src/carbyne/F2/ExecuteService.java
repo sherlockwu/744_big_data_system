@@ -8,6 +8,10 @@ import carbyne.schedulers.IntraJobScheduler;
 import carbyne.simulator.Simulator;
 
 import javax.crypto.Mac;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -128,11 +132,13 @@ public class ExecuteService {
   private Queue<BaseDag> completedJobs_;
   private int nextId_;
   private int maxPartitionsPerTask_;
+  String filename = "stage_data_to_machine_distribution";
 
   private Map<Integer, Map<Integer, Double>> taskOutputs_;  // (taskId, (key, size))
   private Map<Integer, Map<String, Integer>> dagStageNumTaskMap_;    // (dagId, stageName, num of tasks)
   private Map<Integer, Map<String, Map<Integer, Map<Integer, Partition>>>> availablePartitions_; // (dagId, stageName, machineId, paritionId, partition)
 
+  public PrintWriter writer;
   public ExecuteService(Cluster cluster, InterJobScheduler interJobScheduler,
                         IntraJobScheduler intraJobScheduler,
                         Queue<BaseDag> runningJobs, Queue<BaseDag> completedJobs, int maxPartitionsPerTask) {
@@ -146,6 +152,11 @@ public class ExecuteService {
     taskOutputs_ = new HashMap<>();
     availablePartitions_ = new HashMap<>();
     dagStageNumTaskMap_ = new HashMap<>();
+    try {
+      writer = new PrintWriter(filename, "UTF-8");
+    } catch(IOException e) {
+      System.out.println(String.format("cannot open file %s", filename));
+    }
   }
 
   private void addPartition(int dagId, String stageName, int machineId, int pid, Partition partition) {
@@ -167,13 +178,27 @@ public class ExecuteService {
     pp.put(pid, partition);
   }
 
-  public void printAvailablePartition(int dagId, String stageName) {
+  private double getTotalSizePerMachine(Map<Integer, Partition> partitions, int machineId) {
+    Double sum = 0.0;
+    for(Map.Entry<Integer, Partition> mEntry : partitions.entrySet()) {
+      Partition cur = mEntry.getValue();
+      sum += cur.getPartitionSizeOnMachine(machineId);
+    }
+    return sum;
+  }
+
+  public void printAvailablePartition(int dagId, String stageName) throws IOException {
+    //add print here.
     Map<Integer, Map<Integer, Partition>> macPart = availablePartitions_.get(dagId).get(stageName);
+    writer.write(String.format("%d， %s, %d\n", dagId, stageName, macPart.keySet().size()));
+
     for (Map.Entry<Integer, Map<Integer, Partition>> mpEntry : macPart.entrySet()) {
       int machineId = mpEntry.getKey();
       Map<Integer, Partition> partMap = mpEntry.getValue();
       System.out.print(String.format("Available partitions for dag %d, stage %s on machine %d, ", dagId, stageName, machineId)); 
       System.out.println(partMap.keySet().size() + " paritions: " + partMap.keySet());
+      Double totalSizePerMachine = getTotalSizePerMachine(partMap, machineId);
+      writer.write(String.format("%d, %f\n", machineId, totalSizePerMachine));
     }
   }
 
@@ -186,6 +211,7 @@ public class ExecuteService {
       interJobScheduler_.schedule(cluster_);
     }
     LOG.info("Running jobs size:" + runningJobs_.size());
+    //for each newly running dag, put its new runnable stages to dagRunnableStagesMap
     for (BaseDag dag: runningJobs_) {
       StageDag rDag = (StageDag)dag;
       dagRunnableStagesMap.put(rDag.getDagId(),
@@ -241,7 +267,11 @@ public class ExecuteService {
           assert parents.size() == 1;
           String parent = parents.iterator().next();
           System.out.println("dagId=" + dagId + ", stageName=" + stageName + ", parent(s)=" + parent);
-          printAvailablePartition(dagId, parent);
+          try {
+            printAvailablePartition(dagId, parent);
+          } catch (IOException e) {
+            System.out.println("fail to write to file");
+          }
           Map<Integer, Map<Integer, Partition>> machinePartMap = availablePartitions_.get(dagId).get(parent);
           for (Map.Entry<Integer, Map<Integer, Partition>> mchPart: machinePartMap.entrySet()) {
             int machineId = mchPart.getKey();
@@ -249,6 +279,7 @@ public class ExecuteService {
             int count = 0;
             for (Map.Entry<Integer, Partition> partkv: partMap.entrySet()) {
               if (count % maxPartitionsPerTask_ == 0) {
+                //create a new task
                 taskId = nextId_;
                 nextId_++;
                 totalNumTasks++;
@@ -258,6 +289,7 @@ public class ExecuteService {
                 taskOutput = taskOutputs_.get(taskId);
                 dag.addRunnableTask(taskId, stageName, machineId);
               }
+              //set output key, value map for newly created task
               count++;
               Partition pt = partkv.getValue();
               Map<Integer, Map<Integer, Double>> data = pt.getData();   // machine, key, size
@@ -281,7 +313,6 @@ public class ExecuteService {
   private void receiveReadyEvent(ReadyEvent readyEvent, Set<String> newRunnableStageNameSet) {
     int dagId = readyEvent.getDagId();
     BaseDag dag = getDagById(dagId);
-    //fetch data from the partition of this readyEvent
     int stageId = readyEvent.getStageId();
     String stageName = readyEvent.getStageName();
     Partition partition = readyEvent.getPartition();
@@ -297,7 +328,7 @@ public class ExecuteService {
       }
     }
 
-    //copy data to a single node if more than 1 machine is data holder
+    //copy data to a single node if more than 1 machine are data holders
     if(machines.size() > 1) {
       partition.aggregateKeyShareToSingleMachine(id, machines);
     }

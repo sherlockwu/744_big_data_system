@@ -153,6 +153,7 @@ public class Simulator {
           System.out.println(dagId+" "+results.get(dagId));
         }
         System.out.println("NUM_OPT:"+Globals.NUM_OPT+" NUM_PES:"+Globals.NUM_PES);
+        es.writer.close();
         break;
       }
 
