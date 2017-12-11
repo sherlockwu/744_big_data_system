@@ -1,14 +1,16 @@
 import random
+import json
 
-config = json.load(open('config0.json'))
-dags = json.load(open('dags-input0.json'))
-intermediate = open("stage_data_to_machine_distribution")
+config = json.load(open('dag_sim/CarbyneSim/inputs/config0.json'))
+dags = json.load(open('dag_sim/CarbyneSim/inputs/dags-input0.json'))
+intermediate = open("dag_sim/CarbyneSim/inputs/stage_data_to_machine_distribution")
 
 # For parse cluster and DAG Information
 def parseCluster():   #TODO
     machineKey = 'machines'
     replicaKey = 'replica'
     numMachine = config[machineKey][0][replicaKey]
+
     return numMachine
 
 def parseIntermediate():
@@ -40,7 +42,9 @@ def parseDAG():        #TODO
     stageRuntimeKey = "stageRuntime"
     dependencyKey = "dependencies"
     durationKey = 'duration'
+    
     DAG = {}
+
     intermediateOutputStoreOnMachinesNumber = parseIntermediate()
     stageRunTime = []
     stages = singleDag[stageKey]
@@ -57,7 +61,17 @@ def parseDAG():        #TODO
 
     DAG[stageRuntimeKey] = stageRunTime
     DAG[dependencyKey] = parent
-    return DAG, numStage, intermediateOutputStoreOnMachinesNumber
+
+    DAG_RESULT = []
+    for i in range(len(stageRunTime)):
+        run_time = stageRunTime[i]
+        if i > 0:
+            cur_parent = parent["Stage_"+str(i)]
+        else:
+            cur_parent = -1
+        DAG_RESULT.append(Node(run_time, cur_parent))
+    
+    return DAG_RESULT, numStage, intermediateOutputStoreOnMachinesNumber
 
 
 # For optimization

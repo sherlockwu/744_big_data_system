@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     # Get DAG information
     DAG, Ns, n = helper.parseDAG()
-    print "=== DAG parsed having ", Ns, "task"
+    print "=== DAG parsed having ", Ns, "task", " each:", n
     print len(DAG)
     for i in range(len(DAG)):
         print "This node: ", DAG[i].run_time_, " parent: ", DAG[i].parent_
