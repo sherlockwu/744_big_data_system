@@ -12,9 +12,14 @@ class StageOutput {
   private Set<Integer> readyPartitionSet_;
   private Partition[] partitions_;
 
-  public StageOutput(double[] usage, double quota, int numGlobalPart) {
-    setNumMachines(usage, quota);
-    assignMachines(usage);
+  public StageOutput(double[] usage, double quota, int numGlobalPart, List<Integer> deployment) {
+    if (deployment == null) {
+      setNumMachines(usage, quota);
+      assignMachines(usage);
+    } else {
+      machineIds_ = deployment.stream().mapToInt(Integer::intValue).toArray();
+      numMachines_ = machineIds_.length;
+    }
     numGlobalPart_ = numGlobalPart;
     numTotalPartitions_ = numGlobalPart * numMachines_;
     partitions_ = new Partition[numTotalPartitions_];

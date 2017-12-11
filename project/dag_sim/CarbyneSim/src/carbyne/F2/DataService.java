@@ -14,12 +14,33 @@ public class DataService {
 
   private static Logger LOG = Logger.getLogger(DataService.class.getName());
 
+  public DataService(double[] quota, int numGlobalPart, int numMachines, List<List<List<Integer>>> deployment) {
+    quota_ = quota;
+    numGlobalPart_ = numGlobalPart;
+    numMachines_ = numMachines;
+    usagePerJob_ = new HashMap<>();
+    stageOutputPerJob_ = new HashMap<>();
+    loadScheme(deployment);
+  }
+
   public DataService(double[] quota, int numGlobalPart, int numMachines) {
     quota_ = quota;
     numGlobalPart_ = numGlobalPart;
     numMachines_ = numMachines;
     usagePerJob_ = new HashMap<>();
     stageOutputPerJob_ = new HashMap<>();
+  }
+
+  public void loadScheme(List<List<List<Integer>>> deployment) {
+    for (int dagId = 0; dagId < deployment.size(); dagId++) {
+      List<List<Integer>> depDag = deployment.get(dagId);
+      usagePerJob_.put(dagId, new double[numMachines_]);
+      stageOutputPerJob_.put(dagId, new HashMap<Integer, StageOutput>());
+      Map<Integer, StageOutput> dagIntermediateData = stageOutputPerJob_.get(dagId);
+      for (int stageId = 0; stageId < depDag.size(); stageId++) {
+        dagIntermediateData.put(stageId, new StageOutput(usagePerJob_.get(dagId), quota_[dagId], numGlobalPart_, depDag.get(stageId)));
+      }
+    }
   }
 
   public void removeCompletedJobs(Queue<BaseDag> completedJobs) {
@@ -56,7 +77,7 @@ public class DataService {
     }
     Map<Integer, StageOutput> dagIntermediateData = stageOutputPerJob_.get(dagId);
     if (!dagIntermediateData.containsKey(stageId)) {
-      dagIntermediateData.put(stageId, new StageOutput(usagePerJob_.get(dagId), quota_[dagId], numGlobalPart_));
+      dagIntermediateData.put(stageId, new StageOutput(usagePerJob_.get(dagId), quota_[dagId], numGlobalPart_, null));
     }
     //machineId -> usage on that machine
     Map<Integer, Double> newUsage = dagIntermediateData.get(stageId).materialize(event.getData(), event.getTimestamp());
