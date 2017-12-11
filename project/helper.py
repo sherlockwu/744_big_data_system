@@ -1,6 +1,7 @@
 import random
 import json
-import re
+import csv
+import subprocess
 
 config = json.load(open('dag_sim/CarbyneSim/inputs/config0.json'))
 dags = json.load(open('dag_sim/CarbyneSim/inputs/dags-input0.json'))
@@ -110,7 +111,14 @@ def calculate_score(placement, DAG):
 
 
 def get_time_from_simulator(placement):   #TODO
-    return 10.0
+    with open("dag_sim/CarbyneSim/inputs/deploy.csv", "wb") as f:
+        writer = csv.writer(f)
+        writer.writerows(placement)
+    res = subprocess.check_output("dag_sim/CarbyneSim/run_demo.sh", shell=True)
+    last_line = res.split('\n')[-2]
+    return int(last_line)
+    #return 10
+
 
 def recover(machine, task, DAG, placement):
     # recover until parent node doesn't store output on this machine

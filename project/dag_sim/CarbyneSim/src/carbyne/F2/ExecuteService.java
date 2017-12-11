@@ -190,7 +190,7 @@ public class ExecuteService {
   public void printAvailablePartition(int dagId, String stageName) throws IOException {
     //add print here.
     Map<Integer, Map<Integer, Partition>> macPart = availablePartitions_.get(dagId).get(stageName);
-    writer.write(String.format("%d， %s, %d\n", dagId, stageName, macPart.keySet().size()));
+    writer.write(String.format("%d, %s, %d\n", dagId, stageName, macPart.keySet().size()));
 
     for (Map.Entry<Integer, Map<Integer, Partition>> mpEntry : macPart.entrySet()) {
       int machineId = mpEntry.getKey();

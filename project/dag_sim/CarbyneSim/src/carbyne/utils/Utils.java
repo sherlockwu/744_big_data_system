@@ -83,22 +83,24 @@ public class Utils {
   }
 
   private static List<Integer> trimBox(List<String> strList) {
-    int l = strList.size();
-    List<Integer>  res = new ArrayList<>();
-    for (int i = 0; i < l; i++) {
-      List<Integer> currentLineInteger = new ArrayList<>();
-      String cur = strList.get(i);
-      StringBuilder stringBuilder = new StringBuilder();
-
-      int stringLength = cur.length();
-      for (int j = 0; j < stringLength; j++) {
-        char c = cur.charAt(j);
-        if (c == ' ' || c == '\n')
-          continue;
-        stringBuilder.append(c);
-      }
-      String finalString = stringBuilder.toString();
-      currentLineInteger.add(Integer.parseInt(finalString));
+    List<Integer> res = new ArrayList<>();
+//    for (int i = 0; i < l; i++) {
+//      List<Integer> currentLineInteger = new ArrayList<>();
+//      String cur = strList.get(i);
+//      StringBuilder stringBuilder = new StringBuilder();
+//
+//      int stringLength = cur.length();
+//      for (int j = 0; j < stringLength; j++) {
+//        char c = cur.charAt(j);
+//        if (c == ' ' || c == '\n')
+//          continue;
+//        stringBuilder.append(c);
+//      }
+//      String finalString = stringBuilder.toString();
+//      currentLineInteger.add(Integer.parseInt(finalString));
+//    }
+    for(String str : strList) {
+      res.add(Integer.parseInt(str.trim()));
     }
     return res;
   }
