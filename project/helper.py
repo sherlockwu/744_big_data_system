@@ -38,14 +38,14 @@ def parseDAG():        #TODO
     # DAG = [Node(4.0, -1), Node(6.0, 0), Node(10.0, 1)]
     # Ns = 3
     # n = [3, 4, 1]
- 
+
     # return DAG, Ns, n
     singleDag = dags[0]
     stageKey = "stages"
     stageRuntimeKey = "stageRuntime"
     dependencyKey = "dependencies"
     durationKey = 'duration'
-    
+
     DAG = {}
 
     intermediateOutputStoreOnMachinesNumber = parseIntermediate()
@@ -74,7 +74,7 @@ def parseDAG():        #TODO
         else:
             cur_parent = -1
         DAG_RESULT.append(Node(run_time, cur_parent))
-    
+
     return DAG_RESULT, numStage, intermediateOutputStoreOnMachinesNumber
 
 
@@ -89,7 +89,7 @@ def random_generate_one(Nm, Ns, n):
     res = []
     for i in range(Ns-1):
         res.append( random_generate_one_task(Nm, n[i]) )
-    
+
     return res # a dataplacement
 
 ## calculate score of this placment strategy
@@ -116,7 +116,7 @@ def get_time_from_simulator(placement):   #TODO
         writer = csv.writer(f)
         writer.writerows(placement)
     os.chdir('dag_sim/CarbyneSim')
-    res = subprocess.check_output("run_demo.sh", shell=True)
+    res = subprocess.check_output("./run_demo.sh", shell=True)
     os.chdir('../..')
     arr = res.split('\n')
     return float(arr[-3].split()[1])
