@@ -111,12 +111,17 @@ def calculate_score(placement, DAG):
 
 
 def get_time_from_simulator(placement):   #TODO
-    with open("dag_sim/CarbyneSim/inputs/deploy.csv", "wb") as f:
-        writer = csv.writer(f)
-        writer.writerows(placement)
-    res = subprocess.check_output("dag_sim/CarbyneSim/run_demo.sh", shell=True)
-    last_line = res.split('\n')[-2]
-    return int(last_line)
+    # with open("dag_sim/CarbyneSim/inputs/deploy.csv", "wb") as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(placement)
+    # res = subprocess.check_output("dag_sim/CarbyneSim/run_demo.sh", shell=True)
+    # last_line = res.split('\n')[-2]
+    arr = []
+    with  open("dag_sim/CarbyneSim/result") as file:
+        for row in file:
+            arr.append(row)
+    print 
+    return float(arr[-2].split()[1])
     #return 10
 
 
