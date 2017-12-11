@@ -82,6 +82,50 @@ public class Utils {
     return timeline;
   }
 
+  private static List<Integer> trimBox(List<String> strList) {
+    int l = strList.size();
+    List<Integer>  res = new ArrayList<>();
+    for (int i = 0; i < l; i++) {
+      List<Integer> currentLineInteger = new ArrayList<>();
+      String cur = strList.get(i);
+      StringBuilder stringBuilder = new StringBuilder();
+
+      int stringLength = cur.length();
+      for (int j = 0; j < stringLength; j++) {
+        char c = cur.charAt(j);
+        if (c == ' ' || c == '\n')
+          continue;
+        stringBuilder.append(c);
+      }
+      String finalString = stringBuilder.toString();
+      currentLineInteger.add(Integer.parseInt(finalString));
+    }
+    return res;
+  }
+
+  public static List<List<List<Integer>>> parseDeploy() {
+    String fileName = Globals.DataFolder+"/deploy.txt";
+    File file = new File(fileName);
+    List<List<Integer>> deploy = new ArrayList<>();
+    List<List<List<Integer>>> res = new ArrayList<>();
+    try {
+      BufferedReader br = new BufferedReader(new FileReader(file));
+      String line;
+      while ((line = br.readLine()) != null) {
+        line = line.trim();
+        List<String> strList = Arrays.asList(line.split(","));
+        List<Integer> currentStage = trimBox(strList);
+
+        deploy.add(currentStage);
+      }
+      br.close();
+    } catch (Exception e) {
+      System.err.println("Catch exception: " + e);
+    }
+    res.add(deploy);
+    return res;
+  }
+
   public static void writeDagToFile(StageDag dag, boolean considerTimeDistr) {
     File file = new File(Globals.DataFolder+"/"+Globals.FileOutput);
     try {
