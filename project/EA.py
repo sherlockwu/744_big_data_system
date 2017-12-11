@@ -18,7 +18,7 @@ DAG = []
 class EA_Optimizer(EvolutionaryAlgorithm):
     def _initial_population(self):
         global Nm, Ns, n, DAG
-        return list( helper.random_generate_one(Nm, Ns, n) for _ in range(500))
+        return list( helper.random_generate_one(Nm, Ns, n) for _ in range(500))   #TODO
 
     def _fitness(self, member):
         global Nm, Ns, n, DAG
@@ -34,7 +34,7 @@ class EA_Optimizer(EvolutionaryAlgorithm):
         global Nm, Ns, n, DAG
         
         if self.mutation_rate >= random():
-            for i in range(Ns):     # try to mutate each task
+            for i in range(Ns-1):     # try to mutate each task  TODO
                 if self.mutation_rate >= random():
                     member[i] = helper.random_generate_one_task( Nm, n[i] )
         

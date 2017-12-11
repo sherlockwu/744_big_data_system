@@ -1,5 +1,6 @@
 import random
 import json
+import re
 
 config = json.load(open('dag_sim/CarbyneSim/inputs/config0.json'))
 dags = json.load(open('dag_sim/CarbyneSim/inputs/dags-input0.json'))
@@ -66,7 +67,8 @@ def parseDAG():        #TODO
     for i in range(len(stageRunTime)):
         run_time = stageRunTime[i]
         if i > 0:
-            cur_parent = parent["Stage_"+str(i)]
+            cur_parent = int(parent["Stage_"+str(i)].split('_')[-1])
+            print "=== this parent ", cur_parent
         else:
             cur_parent = -1
         DAG_RESULT.append(Node(run_time, cur_parent))
@@ -83,7 +85,7 @@ def random_generate_one_task( Nm, ni ):
 ## Random generate placement for whole DAG
 def random_generate_one(Nm, Ns, n):
     res = []
-    for i in range(Ns):
+    for i in range(Ns-1):
         res.append( random_generate_one_task(Nm, n[i]) )
     
     return res # a dataplacement
@@ -114,19 +116,22 @@ def recover(machine, task, DAG, placement):
     # recover until parent node doesn't store output on this machine
     recover_time = 0
     cur_task = task
+    print task
     while (machine in set(placement[cur_task])):
         recover_time += DAG[cur_task].run_time_
         cur_task = DAG[cur_task].parent_
+        cur_task
         if cur_task == -1:
             break
     return recover_time
 
 
 def calculate_failure_recovery_time(run_time, placement, DAG):
+    print "== calculating for ", placement
     # caculate failure recovery time
     overall_recovery_time = 0
     # dump DAG
-    for i in range(len(DAG)):
+    for i in range(len(DAG)-1):
         node = DAG[i]
         #print "This node: ", node.run_time_, " parent: ", node.parent_
         # calculate probability of occuring a failure during this period of time of task
