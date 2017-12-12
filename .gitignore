@@ -1,4 +1,7 @@
 project/dag_sim/CarbyneSim/.idea/workspace.xml
+project/**/*.csv
+project/**/*.json
+project/**/*.pyc
 .idea/*
 **/.idea/*
 project/dag_sim/CarbyneSim/logs/*

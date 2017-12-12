@@ -106,7 +106,7 @@ public class Utils {
   }
 
   public static List<List<List<Integer>>> parseDeploy() {
-    String fileName = Globals.DataFolder+"/deploy.txt";
+    String fileName = "inputs/deploy.csv";
     File file = new File(fileName);
     List<List<Integer>> deploy = new ArrayList<>();
     List<List<List<Integer>>> res = new ArrayList<>();
@@ -116,15 +116,16 @@ public class Utils {
       while ((line = br.readLine()) != null) {
         line = line.trim();
         List<String> strList = Arrays.asList(line.split(","));
-        List<Integer> currentStage = trimBox(strList);
-
-        deploy.add(currentStage);
+        System.out.println(strList);
+        deploy.add(trimBox(strList));
       }
       br.close();
     } catch (Exception e) {
       System.err.println("Catch exception: " + e);
     }
     res.add(deploy);
+    System.out.println("result!!");
+    System.out.println(res);
     return res;
   }
 

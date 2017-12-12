@@ -132,7 +132,7 @@ public class ExecuteService {
   private Queue<BaseDag> completedJobs_;
   private int nextId_;
   private int maxPartitionsPerTask_;
-  String filename = "stage_data_to_machine_distribution";
+  String filename = "inputs/stage_data_to_machine_distribution";
 
   private Map<Integer, Map<Integer, Double>> taskOutputs_;  // (taskId, (key, size))
   private Map<Integer, Map<String, Integer>> dagStageNumTaskMap_;    // (dagId, stageName, num of tasks)
@@ -191,7 +191,7 @@ public class ExecuteService {
     //add print here.
     Map<Integer, Map<Integer, Partition>> macPart = availablePartitions_.get(dagId).get(stageName);
     writer.write(String.format("%d, %s, %d\n", dagId, stageName, macPart.keySet().size()));
-
+    System.out.println(String.format("%d, %s, %d\n", dagId, stageName, macPart.keySet().size()));
     for (Map.Entry<Integer, Map<Integer, Partition>> mpEntry : macPart.entrySet()) {
       int machineId = mpEntry.getKey();
       Map<Integer, Partition> partMap = mpEntry.getValue();

@@ -1,0 +1,1 @@
+java -cp "classes/:jars/json-simple-1.1.1.jar" -Djava.util.logging.config.file=logging_dagsim.properties carbyne.simulator.Main inputs/config_test.json inputs/dags-input_test.json 2 0.1 2 true DRF CP 0.1 false false

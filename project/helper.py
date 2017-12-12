@@ -4,9 +4,8 @@ import csv
 import os
 import subprocess
 
-config = json.load(open('dag_sim/CarbyneSim/inputs/config0.json'))
-dags = json.load(open('dag_sim/CarbyneSim/inputs/dags-input0.json'))
-intermediate = open("dag_sim/CarbyneSim/inputs/stage_data_to_machine_distribution")
+config = json.load(open('dag_sim/CarbyneSim/inputs/config_test.json'))
+dags = json.load(open('dag_sim/CarbyneSim/inputs/dags-input_test.json'))
 
 # For parse cluster and DAG Information
 def parseCluster():   #TODO
@@ -18,11 +17,16 @@ def parseCluster():   #TODO
 
 def parseIntermediate():
     intermediateOutputStoreOnMachinesNumber = []
+    os.chdir('dag_sim/CarbyneSim')
+    res = subprocess.call("./run_demo_first.sh", shell=True)
+    os.chdir('../..')
+    intermediate = open("dag_sim/CarbyneSim/inputs/stage_data_to_machine_distribution")
     for row in intermediate:
         arr = row.split(',')
         if len(arr) != 3:
             continue
         intermediateOutputStoreOnMachinesNumber.append(int(arr[2]))
+    intermediate.close()
     return intermediateOutputStoreOnMachinesNumber
 
 
@@ -88,6 +92,7 @@ def random_generate_one_task( Nm, ni ):
 def random_generate_one(Nm, Ns, n):
     res = []
     for i in range(Ns-1):
+        print i, len(n), Ns
         res.append( random_generate_one_task(Nm, n[i]) )
 
     return res # a dataplacement
@@ -116,7 +121,7 @@ def get_time_from_simulator(placement):   #TODO
         writer = csv.writer(f)
         writer.writerows(placement)
     os.chdir('dag_sim/CarbyneSim')
-    res = subprocess.check_output("./run_demo.sh", shell=True)
+    res = subprocess.check_output("./run_demo_not_first.sh", shell=True)
     os.chdir('../..')
     arr = res.split('\n')
     return float(arr[-3].split()[1])

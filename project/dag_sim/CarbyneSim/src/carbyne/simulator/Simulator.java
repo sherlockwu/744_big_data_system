@@ -102,7 +102,12 @@ public class Simulator {
     interJobSched = new InterJobScheduler(cluster_);
     intraJobSched = new IntraJobScheduler(cluster_);
 
-    ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
+    if(Globals.isFirstRun) {
+      ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size());
+    }
+    else {
+      ds = new DataService(quota.stream().mapToDouble(v -> v).toArray(), config.getNumGlobalPart(), cluster_.getMachines().size(), Utils.parseDeploy());
+    }
     es = new ExecuteService(cluster_, interJobSched, intraJobSched, runningJobs, completedJobs, config.getMaxPartitionsPerTask());
 
     leftOverResAllocator = new LeftOverResAllocator();

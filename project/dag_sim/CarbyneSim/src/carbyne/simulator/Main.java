@@ -65,6 +65,7 @@ public class Main {
     public static String FileOutput;
     public static String pathToInputDagFile = "inputs/dags-input0.json";
     public static String pathToConfig = "inputs/config.json";
+    public static boolean isFirstRun;
   }
 
   public static void main(String[] args) {
@@ -74,7 +75,7 @@ public class Main {
         + "inter_job_policy=[FAIR | DRF | SJF] "
         + "intra_job_policy=[CARBYNE | TETRIS | CP | BFS | RANDOM]"
         + " level_optimism([0.0 - 1.0])"
-        + " compute_stats";
+        + " compute_stats" + "  isFirstRun ";
 
     // read parameters from command line, if specified
     if (Globals.runmode == RunMode.CommandLine) {
@@ -187,6 +188,14 @@ public class Main {
         System.exit(0);
       }
       Globals.COMPUTE_STATISTICS = compute_stats;
+
+      curArg++;
+      if (args.length == curArg) {
+        LOG.info(UsageStr);
+        System.exit(0);
+      }
+
+      Globals.isFirstRun = Boolean.parseBoolean(args[curArg]);
 
     }
     
