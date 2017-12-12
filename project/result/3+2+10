@@ -1,0 +1,65 @@
+=====================
+Simulation Parameters
+=====================
+pathToInputDagFile     = inputs/dags-input_test.json
+SIMULATION_END_TIME = 2.0
+STEP_TIME           = 0.1
+NUM_MACHINES        = 0
+NUM_DIMENSIONS      = 2
+MACHINE_MAX_RESOURCE= 0.0
+ADJUST_FUNGIBLE     = true
+JOBS_ARRIVAL_POLICY = Trace
+INTER_JOB_POLICY    = DRF
+INTRA_JOB_POLICY    = CP
+LEVEL_OF_OPTIMISM   = 0.1
+INTRODUCED RES.ERROR= 0.0
+=====================
+
+Print DAGs
+
+ == DAG: 0 ==
+Stage: 0 Stage_0, duration:0.2, Resources: [0.1 0.1 ]
+Maximum Parallel Tasks:2  Parents: 
+Stage: 1 Stage_1, duration:0.2, Resources: [0.1 0.1 ]
+Maximum Parallel Tasks:2  Parents: Stage_0, 
+Stage: 2 Stage_2, duration:0.2, Resources: [0.1 0.1 ]
+Maximum Parallel Tasks:2  Parents: Stage_1, 
+== CP ==
+{Stage_0=0.6000000000000001, Stage_1=0.4, Stage_2=0.2}
+Cluster starts collecting finihsTasks. Current Time: 0.0
+handleNewJobArrival; currentTime:0.0 nextTime:0.0
+Started job:0 at time:0.0
+DagID:0 launched tasks now:0,1,
+Cluster starts collecting finihsTasks. Current Time: 0.1
+handleNewJobArrival; currentTime:0.1 nextTime:0.0
+Cluster starts collecting finihsTasks. Current Time: 0.2
+handleNewJobArrival; currentTime:0.2 nextTime:0.0
+machineIds_ size: 2, indexes size: 2
+dagId=0, stageName=Stage_1, parent(s)=Stage_0
+0, Stage_0, 2
+
+Available partitions for dag 0, stage Stage_0 on machine 0, 2 paritions: [0, 1]
+Available partitions for dag 0, stage Stage_0 on machine 1, 2 paritions: [2, 3]
+DagID:0 launched tasks now:2,3,
+Cluster starts collecting finihsTasks. Current Time: 0.3
+handleNewJobArrival; currentTime:0.3 nextTime:0.0
+Cluster starts collecting finihsTasks. Current Time: 0.4
+handleNewJobArrival; currentTime:0.4 nextTime:0.0
+machineIds_ size: 2, indexes size: 2
+dagId=0, stageName=Stage_2, parent(s)=Stage_1
+0, Stage_1, 2
+
+Available partitions for dag 0, stage Stage_1 on machine 0, 2 paritions: [2, 3]
+Available partitions for dag 0, stage Stage_1 on machine 1, 2 paritions: [0, 1]
+DagID:0 launched tasks now:4,5,
+Cluster starts collecting finihsTasks. Current Time: 0.5
+handleNewJobArrival; currentTime:0.5 nextTime:0.0
+Cluster starts collecting finihsTasks. Current Time: 0.6
+handleNewJobArrival; currentTime:0.6 nextTime:0.0
+Cluster starts collecting finihsTasks. Current Time: 0.7
+==== Final Report: Completed Jobs ====
+---------------------
+Avg. job compl. time:0.7
+Makespan:0.7
+0 0.7
+NUM_OPT:0 NUM_PES:0

@@ -74,7 +74,7 @@ def parseDAG():        #TODO
         run_time = stageRunTime[i]
         if i > 0:
             cur_parent = int(parent["Stage_"+str(i)].split('_')[-1])
-            print "=== this parent ", cur_parent
+            #print "=== this parent ", cur_parent
         else:
             cur_parent = -1
         DAG_RESULT.append(Node(run_time, cur_parent))
@@ -92,26 +92,26 @@ def random_generate_one_task( Nm, ni ):
 def random_generate_one(Nm, Ns, n):
     res = []
     for i in range(Ns-1):
-        print i, len(n), Ns
+        #print i, len(n), Ns
         res.append( random_generate_one_task(Nm, n[i]) )
 
     return res # a dataplacement
 
 ## calculate score of this placment strategy
 def calculate_score(placement, DAG):
-    print "Calculating score for ", placement
+    #print "Calculating score for ", placement
     fail_prob = 0.01 # as parameter?
 
     # running time
     run_time = get_time_from_simulator(placement)
-    print "                       Running time ", run_time
+    #print "                       Running time ", run_time
 
     # failure recovery time
     failure_recovery_time = calculate_failure_recovery_time(run_time, placement, DAG)
-    print "                       Expected failure recovery time ", failure_recovery_time
+    #print "                       Expected failure recovery time ", failure_recovery_time
 
     score = run_time + fail_prob * failure_recovery_time
-    print "                       Final Score ", score
+    #print "                       Final Score ", score
 
     return score # score of this placement
 
@@ -131,7 +131,7 @@ def recover(machine, task, DAG, placement):
     # recover until parent node doesn't store output on this machine
     recover_time = 0
     cur_task = task
-    print task
+    #print task
     while (machine in set(placement[cur_task])):
         recover_time += DAG[cur_task].run_time_
         cur_task = DAG[cur_task].parent_
@@ -142,7 +142,7 @@ def recover(machine, task, DAG, placement):
 
 
 def calculate_failure_recovery_time(run_time, placement, DAG):
-    print "== calculating for ", placement
+    #print "== calculating for ", placement
     # caculate failure recovery time
     overall_recovery_time = 0
     # dump DAG

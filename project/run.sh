@@ -7,9 +7,9 @@ do
         do
             #echo $stage_num, $replica_num, $key_num
             python generate.py 1 $stage_num 3 $key_num 10 $replica_num
-            #python wiscDecider.py > $stage_num+_+$key_num+_+$replica_num
             name=$stage_num+$replica_num+$key_num
-            echo aa > result/$name
+            python wiscDecider.py > result/$name
+            #echo aa > result/$name
         done
     done
 done

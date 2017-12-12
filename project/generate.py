@@ -47,7 +47,7 @@ def get_stages():
 	for i in range(stage_num):
 		stage = {}
 		stage["name"] = stage_prefix + str(i)
-		stage["duration"] = random.uniform(0.0, 0.2)
+		stage["duration"] = 0.2 #random.uniform(0.0, 0.2)
 		stage["resources"] = [0.1 for i in range(resources_dimension)]
 		stage["num_tasks"] = 2 #random.randint(2,15)
 		stage["outin_ratio"] = 0.5
