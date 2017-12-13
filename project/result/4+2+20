@@ -76,3 +76,16 @@ Avg. job compl. time:0.9
 Makespan:0.9
 0 0.9
 NUM_OPT:0 NUM_PES:0
+=== this is a cluster with  2 machines
+=== DAG parsed having  4 task  each: [2, 2, 2]
+4
+This node:  0.2  parent:  -1
+This node:  0.2  parent:  0
+This node:  0.2  parent:  1
+This node:  0.2  parent:  2
+4
+TERMINATING - REACHED MAXIMUM STEPS
+[[0, 1], [0, 1], [1, 0]] 0.902666666667
+Running Time          :  0.9
+failure_recovery_time :  0.266666666667
+====== For Round-Robin :
